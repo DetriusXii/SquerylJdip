@@ -27,6 +27,7 @@ object Jdip extends Schema {
    val countries = table[Countries]("countries", "jdip")
    val unitTypes = table[UnitTypes]("unitTypes", "jdip")
    val orderTypes = table[OrderTypes]("orderTypes", "jdip")
+   val orders = table[Orders]("orders", "jdip")
    
    val gamePlayerCountryRelations = 
      manyToManyRelation(gamePlayerRelations, countries, "gamePlayerCountryRelations", "jdip").
@@ -118,7 +119,7 @@ class GamePlayerCountryRelations(val gamePlayerRelationsId: Int,
 }
 
 class OrderTypes(val orderType: String) extends KeyedEntity[String] {
-  def this = this("")
+  def this() = this("")
   
   val id = orderType
 }
@@ -132,7 +133,16 @@ class Messages(val senderId: Int,
   def id = compositeKey(senderId, receiverId, timestamp)
 }
 
-class Orders(val gameStateId: Long, val gamePlayerCountryId: Int, val orderType: ) 
+class Orders(val gameStateId: Long, 
+             val gamePlayerCountryId: Int, 
+             val orderType: String,
+             val unitType: String,
+             val timestamp: Timestamp,
+             val srcLocation: String,
+             val dstLocation: Option[String],
+             val unitLocation: String) {
+  def this() = this(0L, 0, "", "", new Timestamp(0L), "", None, "")
+} 
 
 object Main {
 
@@ -178,9 +188,10 @@ object Main {
        "Italy" :: "Russia" :: "Turkey" :: Nil) map ((u: String) => Jdip.countries.insert(new Countries(u)))
       ("Spring" :: "Fall" :: Nil) map ((u: String) => Jdip.season.insert(new Season(u)))
       ("Movement" :: "Retreat" :: "Build" :: Nil) map ((u: String) => Jdip.phase.insert(new Phase(u)))
-      ("Army" :: "Fleet" :: Nil) map (Jdip.unitTypes.insert(new Phase(_)))
+      ("Army" :: "Fleet" :: Nil) map ((u: String) => Jdip.unitTypes.insert(new UnitTypes(u)))
       ("Move" :: "Support Move" :: "Support Hold" :: 
-       "Convoy" :: "Hold" :: "Construct" :: "Disband" :: Nil) map (Jdip.orderTypes.insert(new OrderTypes(_)))
+       "Convoy" :: "Hold" :: "Construct" :: "Disband" :: Nil) map 
+        ((u:String) => Jdip.orderTypes.insert(new OrderTypes(u)))
       
     }
     
