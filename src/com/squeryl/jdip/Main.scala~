@@ -49,32 +49,7 @@ object Jdip extends Schema {
     oneToManyRelation(gamePlayerCountryRelations, messages).via((gpcr, m) =>
       gpcr.id === m.receiverId
     )
- 
-  val gameNameGameStateForeignKey =
-    oneToManyRelation(games, gameState).via((g, gs) => {
-        g.id === gs.gameName
-    })
-  val seasonForeignKey = oneToManyRelation(season, gameState).via((s, gs) =>
-    s.id === gs.season
-  })
-  val phaseForeignKey = oneToManyRelation(phase, gameState).via((p, gs) => {
-        p.id === gs.phase
-    })
-
-  val gameStateOrdersForeignKey = oneToManyRelation(gameState, orders).via((gs, o) => {
-        gs.id === o.gameStateId
-    })
-  val gamePlayerCountryRelationsOrdersForeignKey = 
-    oneToManyRelation(gamePlayerCountryRelations, orders).via((gpcr, o) => {
-        gpcr.id === o.gamePlayerCountryRelationsId
-    })
-  val orderTypeOrdersForeignKey = oneToManyRelation(orderType, orders).via((ot, o) => {
-        ot.id === o.orderType
-    })
-  val unitTypesOrdersForeignKey = oneToManyRelation(unitType, orders).via((ut, o) => {
-        ut.id === o.unitType
-    })
-
+  
 }
 
 class UnitTypes(val unitType: String) extends KeyedEntity[String] {
