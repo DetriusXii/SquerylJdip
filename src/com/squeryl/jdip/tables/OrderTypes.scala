@@ -5,6 +5,8 @@
 
 package com.squeryl.jdip.tables
 
+import org.squeryl.KeyedEntity
+
 class OrderTypes(val orderType: String) extends KeyedEntity[String] {
   def this() = this("")
   

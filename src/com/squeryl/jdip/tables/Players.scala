@@ -5,10 +5,10 @@
 
 package com.squeryl.jdip.tables
 
+import org.squeryl.KeyedEntity
+
 class Players(val playerName: String) extends KeyedEntity[String] {
   def this() = this("")
   
   val id = playerName
-  
-  lazy val games = Jdip.gamePlayerRelations.right(this)
 }

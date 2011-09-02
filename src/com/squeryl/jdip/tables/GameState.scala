@@ -5,6 +5,8 @@
 
 package com.squeryl.jdip.tables
 
+import org.squeryl.KeyedEntity
+
 class GameState(val gameName: String, 
                 val gameYear: Int, 
                 val season: String, 

@@ -5,6 +5,8 @@
 
 package com.squeryl.jdip.tables
 
+import org.squeryl.KeyedEntity
+
 class Countries(val countryName: String) extends KeyedEntity[String] {
   def this() = this("")
   

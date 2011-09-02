@@ -8,13 +8,11 @@ package com.squeryl.jdip
 import org.squeryl._
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.adapters.PostgreSqlAdapter
-import org.squeryl.dsl.CompositeKey2
 import java.sql.{Array => _, _}
-import org.squeryl.dsl.CompositeKey3
-import org.squeryl.dsl.CompositeKey4
 import org.squeryl.dsl.ast._
 import com.squeryl.jdip.tables._
 import com.squeryl.jdip.schemas.Jdip
+import org.squeryl.internals.FieldMetaData
 
 object Main {
 

@@ -5,6 +5,8 @@
 
 package com.squeryl.jdip.tables
 
+import java.sql.Timestamp
+
 class Orders(val gameStateId: Long, 
              val gamePlayerCountryId: Int, 
              val orderType: String,

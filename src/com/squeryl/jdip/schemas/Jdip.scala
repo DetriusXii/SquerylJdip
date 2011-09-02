@@ -13,11 +13,10 @@ object Jdip extends Schema {
    val games = table[Games]("games", "jdip")
    val players = table[Players]("players", "jdip")
    val gamePlayerRelations = 
-     manyToManyRelation(games, players, "gamePlayerRelations", "jdip").via[GamePlayerRelations](
-       (g,p,gp) => {
+     manyToManyRelation(games, players, "gamePlayerRelations", "jdip").
+      via[GamePlayerRelations]((g,p,gp) => 
          (g.id === gp.gameName, p.id === gp.playerName)
-       }
-     )
+       )
    val countries = table[Countries]("countries", "jdip")
    val unitTypes = table[UnitTypes]("unitTypes", "jdip")
    val gameState = table[GameState]("gameState", "jdip")
@@ -48,7 +47,7 @@ object Jdip extends Schema {
     oneToManyRelation(games, gameState).via((g, gs) => {
         g.id === gs.gameName
     })
-  val seasonForeignKey = oneToManyRelation(season, gameState).via((s, gs) =>
+  val seasonForeignKey = oneToManyRelation(season, gameState).via((s, gs) => {
     s.id === gs.season
   })
   val phaseForeignKey = oneToManyRelation(phase, gameState).via((p, gs) => {
@@ -60,12 +59,12 @@ object Jdip extends Schema {
     })
   val gamePlayerCountryRelationsOrdersForeignKey = 
     oneToManyRelation(gamePlayerCountryRelations, orders).via((gpcr, o) => {
-        gpcr.id === o.gamePlayerCountryRelationsId
+        gpcr.id === o.gamePlayerCountryId
     })
-  val orderTypeOrdersForeignKey = oneToManyRelation(orderType, orders).via((ot, o) => {
+  val orderTypeOrdersForeignKey = oneToManyRelation(orderTypes, orders).via((ot, o) => {
         ot.id === o.orderType
     })
-  val unitTypesOrdersForeignKey = oneToManyRelation(unitType, orders).via((ut, o) => {
+  val unitTypesOrdersForeignKey = oneToManyRelation(unitTypes, orders).via((ut, o) => {
         ut.id === o.unitType
     })
 
