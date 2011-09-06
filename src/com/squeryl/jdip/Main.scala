@@ -7,12 +7,11 @@ package com.squeryl.jdip
 
 import org.squeryl._
 import org.squeryl.PrimitiveTypeMode._
-import org.squeryl.adapters.PostgreSqlAdapter
+import com.squeryl.jdip.adapters.PostgreSqlAdapter
 import java.sql.{Array => _, _}
 import org.squeryl.dsl.ast._
 import com.squeryl.jdip.tables._
 import com.squeryl.jdip.schemas.Jdip
-import org.squeryl.internals.FieldMetaData
 
 object Main {
 
@@ -28,21 +27,7 @@ object Main {
         Session.create(java.sql.DriverManager.getConnection(
             "jdbc:postgresql:postgres", 
             args(0), 
-            args(1)), new PostgreSqlAdapter {
-            override def writeUniquenessConstraint(t: Table[_], cols: Iterable[FieldMetaData]) = {
-              //ALTER TABLE TEST ADD CONSTRAINT NAME_UNIQUE UNIQUE(NAME)
-              val sb = new StringBuilder(256)
-
-              sb.append("alter table ")
-              sb.append(quoteName(t.prefixedName))
-              sb.append(" add constraint ")
-              sb.append(quoteName(t.name + "CPK"))
-              sb.append(" unique(")
-              sb.append(cols.map(_.columnName).map(quoteName(_)).mkString(","))
-              sb.append(")")
-              sb.toString
-            }
-          })
+            args(1)), new PostgreSqlAdapter)
       })
     
     transaction {
@@ -116,7 +101,7 @@ object Main {
                                        austriaGamePlayerCountry.id, 
                                        new Timestamp(secondMessageDate.getTime), 
                                        "No. I will destroy your country and take your lands")
-      (firstMessage :: secondMessage :: Nil) map (u => Jdip.messages.insert(u))
+      (firstMessage :: secondMessage :: Nil) map (Jdip.messages.insert(_))
       
       update(Jdip.messages)(m =>
         where(m.senderId === russiaGamePlayerCountry.id)
