@@ -7,8 +7,6 @@ package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
 
-class UnitTypes(val unitType: String) extends KeyedEntity[String] {
+class UnitTypes(val id: String) extends KeyedEntity[String] {
   def this() = this("")
-  
-  val id = unitType
 }

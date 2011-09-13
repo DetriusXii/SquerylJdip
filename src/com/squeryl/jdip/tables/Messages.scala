@@ -11,6 +11,7 @@ import java.sql.Timestamp
 import org.squeryl.PrimitiveTypeMode._
 
 
+
 class Messages(val senderId: Int, 
                val receiverId: Int, 
                val timestamp: Timestamp,

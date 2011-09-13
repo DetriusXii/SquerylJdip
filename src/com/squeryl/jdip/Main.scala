@@ -38,16 +38,40 @@ object Main {
       Jdip.create
     }
     
+    val countryDescriptions = """This is a landlocked country caught between Turkey and Russia""" ::
+      """This is a western naval country that faces navel aggression from Russia's north fleet and Frances 
+  armies to the South""" :: 
+      """This western power views England and Germant as enemies and trusts Italy as far as she 
+  can throw him""" :: 
+    """This industrial superpower has enemies on every side, but is also near various supply centres.  It's in
+ a strong position to negotiate its survival""" :: 
+    """Italy is a naval power that must uses lies to gain its strength.   It rules in the sea, but 
+faces choke points that limits its reach""" :: 
+    """A vast country that has borders hard to defend and allies intimidated by the Mother Russia due 
+to its size and brutality""" :: 
+    """A well defended country that has difficulties becoming the emperor.  Can easily be contained by any two
+ of Austria, Russia, or Italy working together.""" :: Nil
+    
     transaction {
-      ("Austria" :: "England" :: "France" :: "Germany" :: 
-       "Italy" :: "Russia" :: "Turkey" :: Nil) map ((u: String) => Jdip.countries.insert(new Countries(u)))
-      ("Spring" :: "Fall" :: Nil) map ((u: String) => Jdip.season.insert(new Season(u)))
-      ("Movement" :: "Retreat" :: "Build" :: Nil) map ((u: String) => Jdip.phase.insert(new Phase(u)))
+      (("Austria" :: "England" :: "France" :: "Germany" :: 
+       "Italy" :: "Russia" :: "Turkey" :: Nil) zip countryDescriptions) map (
+       (u: Tuple2[String, String]) => u._1 match {
+         case "Austria" => Jdip.empires.insert(new Empires(u._1, u._2, 1, 2))
+         case "England" => Jdip.empires.insert(new Empires(u._1, u._2, 2, 1))
+         case "France" => Jdip.empires.insert(new Empires(u._1, u._2, 1, 2))
+         case "Germany" => Jdip.empires.insert(new Empires(u._1, u._2, 1, 2))
+         case "Italy" => Jdip.empires.insert(new Empires(u._1, u._2, 2, 1))
+         case "Russia" => Jdip.empires.insert(new Empires(u._1, u._2, 2, 2))
+         case "Turkey" => Jdip.empires.insert(new Empires(u._1, u._2, 1, 2))
+        })
+      ("Spring" :: "Fall" :: Nil) map ((u: String) => Jdip.seasons.insert(new Seasons(u)))
+      ("Movement" :: "Retreat" :: "Build" :: Nil) map ((u: String) => Jdip.phases.insert(new Phases(u)))
       ("Army" :: "Fleet" :: Nil) map ((u: String) => Jdip.unitTypes.insert(new UnitTypes(u)))
       ("Move" :: "Support Move" :: "Support Hold" :: 
        "Convoy" :: "Hold" :: "Construct" :: "Disband" :: Nil) map 
         ((u:String) => Jdip.orderTypes.insert(new OrderTypes(u)))
-      
+      ("Waiting for players" :: "Game Completed" :: "Active" :: "Inactive" :: Nil) map
+        ((u: String) => Jdip.gameStates.insert(new GameStates(u)))
     }
     
     transaction {
