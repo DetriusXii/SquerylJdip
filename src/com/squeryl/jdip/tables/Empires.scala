@@ -9,16 +9,15 @@ import org.squeryl.KeyedEntity
 import org.squeryl.PrimitiveTypeMode._
 
 class Empires(
-  val id: String, 
-  val empireDescription: BinaryType,
+  val id: String,
+  val startingArmyUnits: Int,
   val startingFleetUnits: Int,
-  val startingArmyUnits: Int) extends KeyedEntity[String] {
-  def this() = this("", new BinaryType(0), 0, 0)
-  def this(empireName: String) = this(empireName, new BinaryType(0), 0, 0)
-  def this(empireName: String, empireDescription: String) = 
-    this(empireDescription, empireDescription.trim.getBytes, 0, 0);
-  def this(empireName: String, empireDescription: String, startingFleetUnits: Int, startingArmyUnits: Int) =
-    this(empireName, empireDescription.trim.getBytes, startingFleetUnits, startingArmyUnits)
+  val colour: String,
+  val armySVGElement: BinaryType,
+  val fleetSVGElement: BinaryType) extends KeyedEntity[String] {
   
-  def empireDescriptionString: String = new String(empireDescription)
+  def this() = this("", 0, 0, "", new BinaryType(0), new BinaryType(0))
+  def this(id: String) = this(id, 0, 0, "", new BinaryType(0), new BinaryType(0))
+  def getArmySVGElementAsElem: Elem = XML.loadString(new String(armySVGElement))
+  def getFleetSVGElementAsElem: Elem = XML.loadString(new String(armySVGElement))
 }

@@ -14,7 +14,7 @@ import com.squeryl.jdip.tables._
 import com.squeryl.jdip.schemas.Jdip
 
 object Main {
-
+	
   /**
    * @param args the command line arguments
    */
@@ -37,20 +37,6 @@ object Main {
     transaction {
       Jdip.create
     }
-    
-    val countryDescriptions = """This is a landlocked country caught between Turkey and Russia""" ::
-      """This is a western naval country that faces navel aggression from Russia's north fleet and Frances 
-  armies to the South""" :: 
-      """This western power views England and Germant as enemies and trusts Italy as far as she 
-  can throw him""" :: 
-    """This industrial superpower has enemies on every side, but is also near various supply centres.  It's in
- a strong position to negotiate its survival""" :: 
-    """Italy is a naval power that must uses lies to gain its strength.   It rules in the sea, but 
-faces choke points that limits its reach""" :: 
-    """A vast country that has borders hard to defend and allies intimidated by the Mother Russia due 
-to its size and brutality""" :: 
-    """A well defended country that has difficulties becoming the emperor.  Can easily be contained by any two
- of Austria, Russia, or Italy working together.""" :: Nil
     
     transaction {
       (("Austria" :: "England" :: "France" :: "Germany" :: 

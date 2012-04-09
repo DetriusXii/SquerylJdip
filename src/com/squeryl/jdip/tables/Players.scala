@@ -8,7 +8,7 @@ package com.squeryl.jdip.tables
 import org.squeryl.KeyedEntity
 import org.squeryl.IndirectKeyedEntity
 
-class Players(val id: String) extends KeyedEntity[String] {
-  def this() = this("")
+class Player(val id: String, val password: String, val email: Option[String]) extends KeyedEntity[String] {
+  def this() = this("", "", Some(""))
   
 }
