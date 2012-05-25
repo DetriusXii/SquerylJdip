@@ -15,7 +15,8 @@ import com.squeryl.jdip.exceptions._
 object EmpireCreator {
 	private val ENGLAND_EMPIRE_NAME: String = "England"
 	private val RUSSIA_EMPIRE_NAME: String = "Russia"
-	private val ids: List[String] = "Austria" :: "England" :: "France" :: "Germany" :: "Italy" :: "Russia" :: "Turkey" :: Nil
+	private val ids: List[String] = "Austria" :: "England" :: "France" :: "Germany" :: "Italy" :: 
+          "Russia" :: "Turkey" :: Nil
 	private val cssColours: List[String] = "austriaUnitRed" :: "englandUnitPurple" :: "franceUnitBlue" :: 
 		"germanyUnitBlack" :: "italyUnitGreen" :: "russiaUnitWhite" :: "turkeyUnitYellow" :: Nil
 	
@@ -72,29 +73,29 @@ object EmpireCreator {
 		</svg>
 	} 
 	
-	private def getEmpires: List[Empires] = {
-		var empireList: List[Empires] = Nil
-	
-		try {
-			val getEmpireArmyElement: String => Elem = getSVGTemplate(armySymbol)
-			val getEmpireFleetElement: String => Elem = getSVGTemplate(fleetSymbol)
-		
-			empireList = (ids zip cssColours) map ((u: Tuple2[String, String]) => {
-				val armyElement = getEmpireArmyElement(u._2).toString.getBytes
-				val fleetElement = getEmpireFleetElement(u._2).toString.getBytes
-				
-				u._1 match {
-					case ENGLAND_EMPIRE_NAME => new Empires(u._1, 1, 2, u._2, armyElement, fleetElement) 
-					case RUSSIA_EMPIRE_NAME => new Empires(u._1, 2, 2, u._2, armyElement, fleetElement)
-					case _ => new Empires(u._1, 1, 2, u._2, armyElement, fleetElement)
-				}
-			})
-		} catch {
-			case idElemEx: IDElementNotFoundException => println(idElemEx.getMessage)
-		}
-		
-		return empireList
+	private def getEmpires: List[Empire] = {
+          var empireList: List[Empire] = Nil
+
+          try {
+            val getEmpireArmyElement: String => Elem = getSVGTemplate(armySymbol)
+            val getEmpireFleetElement: String => Elem = getSVGTemplate(fleetSymbol)
+
+            empireList = (ids zip cssColours) map ((u: Tuple2[String, String]) => {
+              val armyElement = getEmpireArmyElement(u._2).toString.getBytes
+              val fleetElement = getEmpireFleetElement(u._2).toString.getBytes
+
+              u._1 match {
+                case ENGLAND_EMPIRE_NAME => new Empire(u._1, 1, 2, u._2, armyElement, fleetElement) 
+                case RUSSIA_EMPIRE_NAME => new Empire(u._1, 2, 2, u._2, armyElement, fleetElement)
+                case _ => new Empire(u._1, 1, 2, u._2, armyElement, fleetElement)
+              }
+            })
+          } catch {
+            case idElemEx: IDElementNotFoundException => println(idElemEx.getMessage)
+          }
+
+          return empireList
 	}
 	
-	lazy val empireList: List[Empires] = getEmpires
+	lazy val empireList: List[Empire] = getEmpires
 }
