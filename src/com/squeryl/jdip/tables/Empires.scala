@@ -7,6 +7,7 @@ package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
 import org.squeryl.PrimitiveTypeMode._
+import scala.xml._
 
 class Empires(
   val id: String,

@@ -8,7 +8,7 @@ package com.squeryl.jdip.tables
 import java.sql.Timestamp
 
 class Orders(val gameStateId: Long, 
-             val gamePlayerCountryId: Int, 
+             val gamePlayerId: Int, 
              val orderType: String,
              val unitType: String,
              val timestamp: Timestamp,

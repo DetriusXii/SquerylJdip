@@ -7,10 +7,12 @@ package com.squeryl.jdip
 
 import org.squeryl._
 import org.squeryl.PrimitiveTypeMode._
-import com.squeryl.jdip.adapters.PostgreSqlAdapter
+import com.squeryl.jdip.adapters.RevisedPostgreSqlAdapter
 import java.sql.{Array => _, _}
 import org.squeryl.dsl.ast._
 import com.squeryl.jdip.tables._
+import com.squeryl.jdip.creators.EmpireCreator
+import com.squeryl.jdip.creators.PlayerCreator
 import com.squeryl.jdip.schemas.Jdip
 
 object Main {
@@ -19,7 +21,6 @@ object Main {
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    println("Hello, world!")
     
     Class.forName("org.postgresql.Driver")
     
@@ -27,7 +28,7 @@ object Main {
         Session.create(java.sql.DriverManager.getConnection(
             "jdbc:postgresql:postgres", 
             args(0), 
-            args(1)), new PostgreSqlAdapter)
+            args(1)), new RevisedPostgreSqlAdapter)
       })
     
     transaction {
@@ -39,17 +40,8 @@ object Main {
     }
     
     transaction {
-      (("Austria" :: "England" :: "France" :: "Germany" :: 
-       "Italy" :: "Russia" :: "Turkey" :: Nil) zip countryDescriptions) map (
-       (u: Tuple2[String, String]) => u._1 match {
-         case "Austria" => Jdip.empires.insert(new Empires(u._1, u._2, 1, 2))
-         case "England" => Jdip.empires.insert(new Empires(u._1, u._2, 2, 1))
-         case "France" => Jdip.empires.insert(new Empires(u._1, u._2, 1, 2))
-         case "Germany" => Jdip.empires.insert(new Empires(u._1, u._2, 1, 2))
-         case "Italy" => Jdip.empires.insert(new Empires(u._1, u._2, 2, 1))
-         case "Russia" => Jdip.empires.insert(new Empires(u._1, u._2, 2, 2))
-         case "Turkey" => Jdip.empires.insert(new Empires(u._1, u._2, 1, 2))
-        })
+      EmpireCreator.empireList map ((u: Empires) => Jdip.empires.insert(u))
+      PlayerCreator.playersList map ((u: Players) => Jdip.players.insert(u))
       ("Spring" :: "Fall" :: Nil) map ((u: String) => Jdip.seasons.insert(new Seasons(u)))
       ("Movement" :: "Retreat" :: "Build" :: Nil) map ((u: String) => Jdip.phases.insert(new Phases(u)))
       ("Army" :: "Fleet" :: Nil) map ((u: String) => Jdip.unitTypes.insert(new UnitTypes(u)))
@@ -63,10 +55,6 @@ object Main {
     transaction {
        val games = ("game1" :: "game2" :: "game3" :: Nil) map
           ((u: String) => Jdip.games.insert(new Games(u)))
-       val players = ("player1" :: "player2" :: 
-          "player3" :: "player4" :: "player5" :: 
-          "player6" :: "player7" :: Nil) map ((u: String) => 
-              Jdip.players.insert(new Players(u)))
        val gamePlayerRelations = (("game1", "player1") :: ("game1", "player2") ::
           ("game1", "player3") :: ("game1", "player4") :: ("game1", "player5") :: Nil) map
           ((u: Tuple2[String, String]) => 

@@ -5,6 +5,4 @@
 
 package com.squeryl.jdip.tables
 
-class GamePlayerCountryRelations {
-
-}
+class Schemata(val schema_name: String) 

@@ -7,12 +7,10 @@ package com.squeryl.jdip.creators
 
 import org.squeryl._
 import org.squeryl.PrimitiveTypeMode._
-import com.squeryl.jdip.adapters.PostgreSqlAdapter
-import java.sql.{Array => _, _}
 import org.squeryl.dsl.ast._
 import com.squeryl.jdip.tables._
-import com.squeryl.jdip.schemas.Jdip
-import com.squeryl.jdip.tables._
+import scala.xml._
+import com.squeryl.jdip.exceptions._
 
 object EmpireCreator {
 	private val ENGLAND_EMPIRE_NAME: String = "England"
@@ -78,8 +76,8 @@ object EmpireCreator {
 		var empireList: List[Empires] = Nil
 	
 		try {
-			def getEmpireArmyElement = getSVGTemplate(armySymbol)
-			def getEmpireFleetElement = getSVGTemplate(fleetSymbol)
+			val getEmpireArmyElement: String => Elem = getSVGTemplate(armySymbol)
+			val getEmpireFleetElement: String => Elem = getSVGTemplate(fleetSymbol)
 		
 			empireList = (ids zip cssColours) map ((u: Tuple2[String, String]) => {
 				val armyElement = getEmpireArmyElement(u._2).toString.getBytes
@@ -92,11 +90,11 @@ object EmpireCreator {
 				}
 			})
 		} catch {
-			case idElemEx: IDElementNotFoundException => println idElemEx.getMessage
+			case idElemEx: IDElementNotFoundException => println(idElemEx.getMessage)
 		}
 		
 		return empireList
 	}
 	
-	lazy val empireList: List[Empires] = getEmpires()
+	lazy val empireList: List[Empires] = getEmpires
 }

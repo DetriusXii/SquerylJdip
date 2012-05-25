@@ -9,32 +9,27 @@ import com.squeryl.jdip.tables._
 import org.squeryl._
 import org.squeryl.PrimitiveTypeMode._
 
-object Jdip extends Schema {
-   val players = table[Players]("players", "jdip")
-   val phases = table[Phases]("phases", "jdip")
-   val seasons = table[Seasons]("seasons", "jdip")
-   val games = table[Games]("games", "jdip")
-   val orderTypes = table[OrderTypes]("orderTypes", "jdip")
-   val orders = table[Orders]("orders", "jdip")
-   val empires = table[Empires]("empires", "jdip")
-   val unitTypes = table[UnitTypes]("unitTypes", "jdip")
-   val gameStates = table[GameStates]("gameStates", "jdip")
-   val messages = table[Messages]("messages", "jdip")
+object Jdip extends PostgreSchema("jdip") {
+  val players = table[Players]("players", schemaName)
+   val phases = table[Phases]("phases", schemaName)
+   val seasons = table[Seasons]("seasons", schemaName)
+   val games = table[Games]("games", schemaName)
+   val orderTypes = table[OrderTypes]("order_types", schemaName)
+   val orders = table[Orders]("orders", schemaName)
+   val empires = table[Empires]("empires", schemaName)
+   val unitTypes = table[UnitTypes]("unit_types", schemaName)
+   val gameStates = table[GameStates]("game_states", schemaName)
+   val messages = table[Messages]("messages", schemaName)
   
-
-
-   
   val gamePlayerRelations = 
-     manyToManyRelation(games, players, "gamePlayerRelations", "jdip").
+     manyToManyRelation(games, players, "game_player_relation", schemaName).
       via[GamePlayerRelations]((g,p,gp) => 
          (g.id === gp.gameName, p.id === gp.playerName)
        ) 
-  val gamePlayerCountryRelations = 
-     manyToManyRelation(gamePlayerRelations, empires, "gamePlayerCountryRelations", "jdip").
-      via[GamePlayerCountryRelations]((gpr, c, gpcr) => 
-        (gpr.id === gpcr.gamePlayerRelationsId, c.id === gpcr.countryName)
-      )
-      
+       
+  val empiresForeignKey = oneToManyRelation(gamePlayerRelations, empires).via((gpr, e) => 
+    e.id === gpr.empireName
+  )
   
   val gamesGameStateForeignKey = oneToManyRelation(gameStates, games).via((gs, g) => {
        gs.id === g.gameState
@@ -47,17 +42,17 @@ object Jdip extends Schema {
     })
   
   val senderMessageForeignKey = 
-    oneToManyRelation(gamePlayerCountryRelations, messages).via((gpcr, m) =>
-      gpcr.id === m.senderId
+    oneToManyRelation(gamePlayerRelations, messages).via((gpr, m) =>
+      gpr.id === m.senderId
     )
   val receiverMessageForeignKey =
-    oneToManyRelation(gamePlayerCountryRelations, messages).via((gpcr, m) =>
-      gpcr.id === m.receiverId
+    oneToManyRelation(gamePlayerRelations, messages).via((gpr, m) =>
+      gpr.id === m.receiverId
     )
  
   val gamePlayerCountryRelationsOrdersForeignKey = 
-    oneToManyRelation(gamePlayerCountryRelations, orders).via((gpcr, o) => {
-        gpcr.id === o.gamePlayerCountryId
+    oneToManyRelation(gamePlayerRelations, orders).via((gpr, o) => {
+        gpr.id === o.gamePlayerId
     })
   val orderTypeOrdersForeignKey = oneToManyRelation(orderTypes, orders).via((ot, o) => {
         ot.id === o.orderType
@@ -65,5 +60,4 @@ object Jdip extends Schema {
   val unitTypesOrdersForeignKey = oneToManyRelation(unitTypes, orders).via((ut, o) => {
         ut.id === o.unitType
     })
-
 }
