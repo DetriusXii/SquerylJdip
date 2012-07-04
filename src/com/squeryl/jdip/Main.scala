@@ -11,8 +11,7 @@ import com.squeryl.jdip.adapters.RevisedPostgreSqlAdapter
 import java.sql.{Array => _, _}
 import org.squeryl.dsl.ast._
 import com.squeryl.jdip.tables._
-import com.squeryl.jdip.creators.EmpireCreator
-import com.squeryl.jdip.creators.PlayerCreator
+import com.squeryl.jdip.creators._
 import com.squeryl.jdip.schemas.Jdip
 
 object Main {
@@ -35,36 +34,37 @@ object Main {
       Jdip.drop
     }
     
+    if (args.length >= 3 && args(2).equalsIgnoreCase("dropOnly")) {
+      println("Terminating program in dropOnly mode")
+      return;
+    }
+    
     transaction {
       Jdip.create
     }
     
     transaction {
-      EmpireCreator.empireList map ((u: Empire) => Jdip.empires.insert(u))
-      PlayerCreator.playersList map ((u: Player) => Jdip.players.insert(u))
+      EmpireCreator.empireList map (Jdip.empires.insert(_))
+      PlayerCreator.playersList map (Jdip.players.insert(_))
+      ProvinceCreator.getProvinceList map (Jdip.provinces.insert(_))
       Jdip.players.insert(new Player("DetriusXii", args(1)))
       Season.getSeasons map (Jdip.seasons.insert(_))
       Phase.getPhases map (Jdip.phases.insert(_))
+      GameTime.getGameTimes map (Jdip.gameTimes.insert(_))
       UnitType.getUnitTypes map (Jdip.unitTypes.insert(_))
       OrderType.getOrderTypes map (Jdip.orderTypes.insert(_))
       GameState.getGameStates map (Jdip.gameStates.insert(_))
       val games = ("game1" :: "game2" :: "game3" :: Nil) map
           ((u: String) => Jdip.games.insert(new Game(u)))
-    }
     
-    transaction {
-       val gamePlayers = (("game1", "player1") :: ("game1", "player2") ::
+      val gamePlayers = (("game1", "player1") :: ("game1", "player2") ::
           ("game1", "player3") :: ("game1", "player4") :: ("game1", "player5") :: 
           ("game1", "DetriusXii") :: ("game1", "player6") :: ("game2", "DetriusXii") :: 
           ("game2", "player1") :: Nil) map
           ((u: Tuple2[String, String]) => 
               Jdip.gamePlayers.insert(new GamePlayer(u._1, u._2)))
           
-       
-    }  
-     
-    transaction {
-      val gamePlayersQuery = from(Jdip.gamePlayers)(gp =>
+     val gamePlayersQuery = from(Jdip.gamePlayers)(gp =>
        where(gp.gameName === "game1") select(gp)
       )
       val ids = gamePlayersQuery map (gpr => gpr.id)
@@ -78,6 +78,7 @@ object Main {
           )
         }
     }
+    
   }
 
 }

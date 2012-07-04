@@ -11,6 +11,7 @@ class Phase(val id: String) extends KeyedEntity[String] {
   def this() = this("")
 }
 
+
 object Phase {
   val MOVEMENT = "Movement"
   val RETREAT = "Retreat"

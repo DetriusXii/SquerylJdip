@@ -9,6 +9,7 @@ import org.squeryl.Table
 import org.squeryl.internals.FieldMetaData
 import java.sql._
 import org.squeryl.Session
+import org.squeryl.annotations._
 
 class RevisedPostgreSqlAdapter extends org.squeryl.adapters.PostgreSqlAdapter {
   override def writeUniquenessConstraint(t: Table[_], cols: Iterable[FieldMetaData]) = {

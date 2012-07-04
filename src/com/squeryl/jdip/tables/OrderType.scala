@@ -19,8 +19,9 @@ object OrderType {
   val HOLD = "HOLD"
   val CONSTRUCT = "Construct"
   val DISBAND = "Disband"
+  val RETREAT = "Retreat"
   
   def getOrderTypes = 
-    MOVE :: SUPPORT_MOVE :: SUPPORT_HOLD :: CONVOY :: HOLD :: CONSTRUCT :: DISBAND :: Nil map
+    MOVE :: SUPPORT_MOVE :: SUPPORT_HOLD :: CONVOY :: HOLD :: CONSTRUCT :: DISBAND :: RETREAT :: Nil map
     (new OrderType(_))
 }
