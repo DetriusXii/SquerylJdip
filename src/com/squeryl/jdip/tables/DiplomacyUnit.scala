@@ -9,5 +9,5 @@ class DiplomacyUnit(val unitType: String,
     val gameTime: Int) extends KeyedEntity[Int] {
   val id = 0
   
-  def this() = this("", 0, "", 0, GameTime.getStartGameTime.id)
+  def this() = this("", 0, "", 0, 0)
 }

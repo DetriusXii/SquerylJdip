@@ -4,7 +4,7 @@ import scala.xml._
 import com.squeryl.jdip.tables.Province
 
 object ProvinceCreator {
-	val JDIP_MAP_SVG_FILENAME: String = "~/jdip/variants/stdVariants/egdipmap.svg"
+	val JDIP_MAP_SVG_FILENAME: String = "/home/detriusxiiuser/jdip/variants/stdVariants/egdipmap.svg"
 	val PROVINCE_TAGNAME =  "PROVINCE"
 	val SUPPLY_CENTER_TAGNAME = "SUPPLY_CENTER"
 	val NAME_ATTRIBUTE = "name"

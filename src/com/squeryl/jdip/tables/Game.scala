@@ -12,8 +12,8 @@ class Game(val id: String,
 			val gameTime: Int,
             val gameState: String, 
             val gameFile: Option[BinaryType]) extends KeyedEntity[String] {
-  def this() = this("", GameTime.getStartGameTime.id, GameState.WAITING, Some(new BinaryType(0)))
+  def this() = this("", 0, GameState.WAITING, Some(new BinaryType(0)))
   
-  def this(u: String) = this(u, GameTime.getStartGameTime.id, GameState.WAITING, Some(new BinaryType(0)))
+  def this(u: String, gameTime: Int) = this(u, gameTime, GameState.WAITING, Some(new BinaryType(0)))
   
 } 

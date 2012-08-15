@@ -28,5 +28,4 @@ object GameTime {
     })
   })
   
-  def getStartGameTime = new GameTime(MIN_GAME_YEAR, Season.SPRING.seasonName, Phase.MOVEMENT)
 }

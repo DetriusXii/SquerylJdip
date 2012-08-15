@@ -50,12 +50,21 @@ object Main {
       Jdip.players.insert(new Player("DetriusXii", args(1)))
       Season.getSeasons map (Jdip.seasons.insert(_))
       Phase.getPhases map (Jdip.phases.insert(_))
-      GameTime.getGameTimes map (Jdip.gameTimes.insert(_))
+      
+      GameTime.getGameTimes.map(Jdip.gameTimes.insert(_))
+      
       UnitType.getUnitTypes map (Jdip.unitTypes.insert(_))
       OrderType.getOrderTypes map (Jdip.orderTypes.insert(_))
       GameState.getGameStates map (Jdip.gameStates.insert(_))
+    
+      val firstGameTime = from(Jdip.gameTimes)(gt => where(
+          gt.gameYear === GameTime.MIN_GAME_YEAR and
+          gt.gameSeason === Season.SPRING.seasonName and
+          gt.gamePhase === Phase.MOVEMENT
+      ) select(gt)).head 
+      
       val games = ("game1" :: "game2" :: "game3" :: Nil) map
-          ((u: String) => Jdip.games.insert(new Game(u)))
+          ((u: String) => Jdip.games.insert(new Game(u, firstGameTime.id)))
     
       val gamePlayers = (("game1", "player1") :: ("game1", "player2") ::
           ("game1", "player3") :: ("game1", "player4") :: ("game1", "player5") :: 
@@ -79,6 +88,8 @@ object Main {
         }
     }
     
+    println("The program terminated successfully")
+    sys.exit(0)
   }
 
 }
