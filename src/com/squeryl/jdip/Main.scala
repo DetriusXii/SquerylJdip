@@ -13,6 +13,8 @@ import org.squeryl.dsl.ast._
 import com.squeryl.jdip.tables._
 import com.squeryl.jdip.creators._
 import com.squeryl.jdip.schemas.Jdip
+import com.squeryl.jdip.creators.DiplomacyUnitCreator
+import com.squeryl.jdip.creators.DiplomacyUnitCreator$
 
 object Main {
 	
@@ -65,7 +67,7 @@ object Main {
       
       val games = ("game1" :: "game2" :: "game3" :: Nil) map
           ((u: String) => Jdip.games.insert(new Game(u, firstGameTime.id)))
-    
+      val game1 = games.find(g => g.id.equals("game1"))
       val gamePlayers = (("game1", "player1") :: ("game1", "player2") ::
           ("game1", "player3") :: ("game1", "player4") :: ("game1", "player5") :: 
           ("game1", "DetriusXii") :: ("game1", "player6") :: ("game2", "DetriusXii") :: 
@@ -76,6 +78,8 @@ object Main {
      val gamePlayersQuery = from(Jdip.gamePlayers)(gp =>
        where(gp.gameName === "game1") select(gp)
       )
+      
+      
       val ids = gamePlayersQuery map (gpr => gpr.id)
       val selectedEmpires = "Turkey" :: "Austria" :: "Russia" :: 
         "England" :: "Italy" :: "France" :: "Germany" :: Nil
@@ -86,6 +90,9 @@ object Main {
           update(Jdip.games)((g: Game) => where(g.id === "game1")set(g.gameState := GameState.ACTIVE)
           )
         }
+      
+      val diplomacyUnits = DiplomacyUnitCreator.getDiplomacyUnits(gamePlayerEmpires)
+      diplomacyUnits map (u => Jdip.gamePlayerEmpires.insert(new GamePlayerEmpire(u._1, u._2)))
     }
     
     println("The program terminated successfully")
