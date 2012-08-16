@@ -1,6 +1,9 @@
 package com.squeryl.jdip.creators
 import scala.xml._
 import com.squeryl.jdip.tables.DiplomacyUnit
+import scalaz._
+import com.squeryl.jdip.tables.GamePlayerEmpire
+import com.squeryl.jdip.tables.GameTime
 
 object DiplomacyUnitCreator {
 	val VARIANTS_FILE_NAME: String = "/home/detriusxiiuser/jdip/variants/stdVariants/variants.xml"
@@ -13,7 +16,7 @@ object DiplomacyUnitCreator {
 	val UNIT_ATTRIBUTE = "unit"
 	val UNITCOAST_ATTRIBUTE = "unitcoast"
 	  
-	def getDiplomacyUnits = {
+	def getDiplomacyUnits(gamePlayerEmpires: Iterable[GamePlayerEmpire], gameTime: GameTime): Iterable[DiplomacyUnit] = {
 	  val variantsXML = XML.load(VARIANTS_FILE_NAME)
 	  
 	  val variantNode = (variantsXML \\ VARIANT_TAGNAME).filter(_ match {
@@ -22,20 +25,35 @@ object DiplomacyUnitCreator {
 	  }).head
 	  
 	  val variantElem = variantNode match {
-	    case u: Elem => u
-	    case _ => throw new Exception("variantNode is not of type Elem")
+	    case u: Elem => Some(u)
+	    case _ => None
 	  }
 	  
-	  variantElem \\ INITIALSTATE_TAGNAME map (_ match {
-	    case u: Elem => {
-	      val province = u.attribute(PROVINCE_ATTRIBUTE)
-	      val power = u.attribute(POWER_ATTRIBUTE)
-	      val unitType = u.attribute(UNIT_ATTRIBUTE)
-	      val unitCoast = u.attribute(UNITCOAST_ATTRIBUTE)
-	      
-	      new DiplomacyUnit(unitType, )
-	    }
-	    case _ => throw new Exception("Nodes are not of type Elem")
-	  })
+	  
+	  variantElem.flatMap((u: Elem) => {
+	    val initialStateProjection = u \\ INITIALSTATE_TAGNAME
+	    val unitNumberWithInitialStateProjection = 
+	    	(0 until initialStateProjection.length) zip initialStateProjection
+	    val diplomacyUnitListOption = unitNumberWithInitialStateProjection map (_ match {
+	      case (unitNumber: Int, initialStateElem: Elem) => 
+	        for (province <- u.attribute(PROVINCE_ATTRIBUTE);
+				  power <- u.attribute(POWER_ATTRIBUTE);
+				  unitType <- u.attribute(UNIT_ATTRIBUTE);
+				  unitCoast <- u.attribute(UNITCOAST_ATTRIBUTE);
+				  owner <- gamePlayerEmpires.find(gpe => gpe.empireName.equals(power.toString))
+			) yield {
+			  val location = u.attribute(UNITCOAST_ATTRIBUTE) match {
+			    case Some(coast) => "%s-%s" format (province.toString, coast.toString)
+			    case None => province.toString
+			  }
+			  new DiplomacyUnit(unitType.toString, owner.id, location, unitNumber, gameTime.id)
+			}
+	      case _ => None
+	    })
+	    Some(diplomacyUnitListOption.flatten)
+	  }) match {
+	    case Some (u) => u
+	    case None => Nil
+	  }
 	}
 }
