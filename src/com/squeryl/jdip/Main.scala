@@ -21,30 +21,8 @@ object Main {
   /**
    * @param args the command line arguments
    */
-  def main(args: Array[String]): Unit = {
-    
-    Class.forName("org.postgresql.Driver")
-    
-    SessionFactory.concreteFactory = Some(() => {
-        Session.create(java.sql.DriverManager.getConnection(
-            "jdbc:postgresql:postgres", 
-            args(0), 
-            args(1)), new RevisedPostgreSqlAdapter)
-      })
-    
-    transaction {
-      Jdip.drop
-    }
-    
-    if (args.length >= 3 && args(2).equalsIgnoreCase("dropOnly")) {
-      println("Terminating program in dropOnly mode")
-      return;
-    }
-    
-    transaction {
-      Jdip.create
-    }
-    
+  
+  private def insertIntoTables(args: Array[String]): Unit = {
     transaction {
       EmpireCreator.empireList map (Jdip.empires.insert(_))
       PlayerCreator.playersList map (Jdip.players.insert(_))
@@ -91,14 +69,42 @@ object Main {
           for ( g1 <- game1;
               gameTime <- Jdip.gameTimes.find(gt => gt.id == g1.gameTime)
           ) yield {
-            update(Jdip.games)((g: Game) => where(g.id === g1.id)set(g.gameState := GameState.ACTIVE))
+            update(Jdip.games)((g: Game) => where(g.id === g1.id)
+                set(g.gameState := GameState.ACTIVE))
             val diplomacyUnits = DiplomacyUnitCreator.getDiplomacyUnits(gamePlayerEmpires, gameTime)
             diplomacyUnits map (u => Jdip.diplomacyUnits.insert(u))
             0
           }  
         }
-      
     }
+  }
+  
+  def main(args: Array[String]): Unit = {
+    
+    Class.forName("org.postgresql.Driver")
+    
+    SessionFactory.concreteFactory = Some(() => {
+        Session.create(java.sql.DriverManager.getConnection(
+            "jdbc:postgresql:postgres", 
+            args(0), 
+            args(1)), new RevisedPostgreSqlAdapter)
+      })
+    
+    transaction {
+      Jdip.drop
+    }
+    
+    Some(Unit).flatMap(_ => {
+      println("Terminate program in dropOnly mode")
+      if (args.length >= 3 && args(2).equalsIgnoreCase("dropOnly")) None
+      else Some(Unit) 
+    }).map(_ => {
+      transaction {
+        Jdip.create
+      } 
+    }).map(_ => {
+      insertIntoTables(args)
+    })
     
     println("The program terminated successfully")
     sys.exit(0)

@@ -6,15 +6,57 @@ import com.squeryl.jdip.tables.GamePlayerEmpire
 import com.squeryl.jdip.tables.GameTime
 
 object DiplomacyUnitCreator {
-	val VARIANTS_FILE_NAME: String = "/home/detriusxiiuser/jdip/variants/stdVariants/variants.xml"
-	val VARIANT_TAGNAME: String = "VARIANT"
-	val NAME_ATTRIBUTE: String = "name"
+	val VARIANTS_FILE_NAME = "/home/detriusxiiuser/jdip/variants/stdVariants/variants.xml"
+	val VARIANT_TAGNAME = "VARIANT"
+	val APPSETTING_TAGNAME =  "appsetting"
+	val NAME_TAGNAME = "name"
+	val VALUE_TAGNAME = "value"
+	val VARIANTS_XML_SEARCHPATHS = "VARIANTS_XML_SEARCHPATHS"
+	val VARIANT_FILENAME = "VARIANT_FILENAME"
 	val STANDARD_VARIANT_NAME = "Standard"
 	val INITIALSTATE_TAGNAME = "INITIALSTATE"
 	val PROVINCE_ATTRIBUTE = "province"
 	val POWER_ATTRIBUTE = "power"
 	val UNIT_ATTRIBUTE = "unit"
 	val UNITCOAST_ATTRIBUTE = "unitcoast"
+	
+	def findFirstVariant(configFilename: String) : Elem = {
+	  val configuration = XML.load(configFilename)
+	  val appsettingNodeseq = configuration \\ APPSETTING_TAGNAME
+	  
+	  val searchPathsOption = appsettingNodeseq.find(_.child.exists(u => {
+	    u.label.equals(NAME_TAGNAME) && u.text.equals(VARIANTS_XML_SEARCHPATHS)
+	  })).map(_ \\ VALUE_TAGNAME map (u => u.text))
+	  
+	  val variantFilenameOption = appsettingNodeseq.find(_.child.exists(u => {
+	    u.label.equals(NAME_TAGNAME) && u.text.equals(VARIANT_FILENAME)
+	  })).map(_ \\ VALUE_TAGNAME map (u => u.text))
+	  
+	  
+	  
+	  
+	  for (searchPaths <- searchPathsOption;
+		   variantFilename <- variantFilenameOption;
+		   	_ <- searchPaths.find((directoryPath: String) =>{
+		   	  val searchDirectory = new java.io.File(directoryPath)
+		   	  searchDirectory.exists() && searchDirectory.isDirectory()
+		   	})
+	  ) yield {
+	    
+	  }
+	  val fileFoundOption = searchPathsOption.flatMap((u: Seq[String]) => {
+	    u.find((v: String) => {
+	      val searchDirectory = new java.io.File(v)
+	      searchDirectory.exists() && searchDirectory.isDirectory() && 
+	      	searchDirectory.listFiles().find((f: java.io.File) => {
+	      	  f.getName().equals("")
+	      	})
+	      
+	    })
+	  })
+	  
+	  <a></a>
+	}  
 	  
 	def getDiplomacyUnits(gamePlayerEmpires: Iterable[GamePlayerEmpire], gameTime: GameTime): Iterable[DiplomacyUnit] = {
 	  val variantsXML = XML.load(VARIANTS_FILE_NAME)
