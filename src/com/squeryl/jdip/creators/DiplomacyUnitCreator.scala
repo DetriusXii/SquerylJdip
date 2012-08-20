@@ -47,7 +47,9 @@ object DiplomacyUnitCreator {
 	  for ( searchPath <- searchPathsListT;
 			variantFilename <- variantFilenamesListT;
 			searchFile <- new File(searchPath) :: ListT.empty[Option, File] if 
-				searchFile.exists && searchFile.isDirectory
+				searchFile.exists && searchFile.isDirectory && searchFile.list.exists((filename) => {
+				  
+				})
 				
 	  ) yield (
 			searchPath
