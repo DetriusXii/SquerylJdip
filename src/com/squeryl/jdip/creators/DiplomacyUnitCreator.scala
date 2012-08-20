@@ -24,36 +24,29 @@ object DiplomacyUnitCreator {
 	  val configuration = XML.load(configFilename)
 	  val appsettingNodeseq = configuration \\ APPSETTING_TAGNAME
 	  
-	  val searchPathsOption = appsettingNodeseq.find(_.child.exists(u => {
+	  val searchPathsOption = appsettingNodeseq.find(_.child.exists(u => 
 	    u.label.equals(NAME_TAGNAME) && u.text.equals(VARIANTS_XML_SEARCHPATHS)
-	  })).map(_ \\ VALUE_TAGNAME map (u => u.text))
+	  )).map(_ \\ VALUE_TAGNAME map (u => u.text))
 	  
-	  val variantFilenameOption = appsettingNodeseq.find(_.child.exists(u => {
+	  val variantFilenamesOption = appsettingNodeseq.find(_.child.exists(u => 
 	    u.label.equals(NAME_TAGNAME) && u.text.equals(VARIANT_FILENAME)
-	  })).map(_ \\ VALUE_TAGNAME map (u => u.text))
+	  )).map(_ \\ VALUE_TAGNAME map (u => u.text))
 	  
-	  
-	  
+	  ListT(searchPathsOption)
 	  
 	  for (searchPaths <- searchPathsOption;
-		   variantFilename <- variantFilenameOption;
-		   	_ <- searchPaths.find((directoryPath: String) =>{
+		   variantFilenames <- variantFilenamesOption;
+		   	filteredSearchPaths <- Some(searchPaths.filter((directoryPath: String) =>{
 		   	  val searchDirectory = new java.io.File(directoryPath)
 		   	  searchDirectory.exists() && searchDirectory.isDirectory()
-		   	})
+		   	}));
+		   	foundDirectoryPath <- filteredSearchPaths.find((directoryPath: String) => {
+		   	  val searchDirectory = new java.io.File(directoryPath)
+		   	  searchDirectory.listFiles.exists(_.getName().equals(variantFilename))
+			})
 	  ) yield {
-	    
+	    new java.io.File(foundDirectoryPath, variantFilename)
 	  }
-	  val fileFoundOption = searchPathsOption.flatMap((u: Seq[String]) => {
-	    u.find((v: String) => {
-	      val searchDirectory = new java.io.File(v)
-	      searchDirectory.exists() && searchDirectory.isDirectory() && 
-	      	searchDirectory.listFiles().find((f: java.io.File) => {
-	      	  f.getName().equals("")
-	      	})
-	      
-	    })
-	  })
 	  
 	  <a></a>
 	}  
