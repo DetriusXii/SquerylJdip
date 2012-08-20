@@ -4,6 +4,7 @@ import com.squeryl.jdip.tables.DiplomacyUnit
 import scalaz._
 import com.squeryl.jdip.tables.GamePlayerEmpire
 import com.squeryl.jdip.tables.GameTime
+import java.io.File
 
 object DiplomacyUnitCreator {
 	val VARIANTS_FILE_NAME = "/home/detriusxiiuser/jdip/variants/stdVariants/variants.xml"
@@ -24,15 +25,33 @@ object DiplomacyUnitCreator {
 	  val configuration = XML.load(configFilename)
 	  val appsettingNodeseq = configuration \\ APPSETTING_TAGNAME
 	  
-	  val searchPathsOption = appsettingNodeseq.find(_.child.exists(u => {
+	  val searchPathsListT = appsettingNodeseq.find(_.child.exists(u => {
 	    u.label.equals(NAME_TAGNAME) && u.text.equals(VARIANTS_XML_SEARCHPATHS)
-	  })).map(_ \\ VALUE_TAGNAME map (u => u.text))
+	  })).map(_ \\ VALUE_TAGNAME map (u => u.text)) match {
+	    case Some(u: Seq[String]) => 
+	      u.foldRight(ListT.empty[Option, String])(
+	          (u: String, v: ListT[Option, String]) => u :: v)
+	    case None => ListT[Option, String](None)
+	  }
 	  
-	  val variantFilenameOption = appsettingNodeseq.find(_.child.exists(u => {
+	  val variantFilenamesListT = appsettingNodeseq.find(_.child.exists(u => {
 	    u.label.equals(NAME_TAGNAME) && u.text.equals(VARIANT_FILENAME)
-	  })).map(_ \\ VALUE_TAGNAME map (u => u.text))
+	  })).map(_ \\ VALUE_TAGNAME map (u => u.text)) match {
+	    case Some(u: Seq[String]) =>
+	      u.foldRight(ListT.empty[Option, String])(
+	    		  (u: String, v: ListT[Option, String]) => u :: v
+	      )
+	    case None => ListT[Option, String](None)
+	  }
 	  
-	  
+	  for ( searchPath <- searchPathsListT;
+			variantFilename <- variantFilenamesListT;
+			searchFile <- new File(searchPath) :: ListT.empty[Option, File] if 
+				searchFile.exists && searchFile.isDirectory
+				
+	  ) yield (
+			searchPath
+	  )
 	  
 	  
 	  for (searchPaths <- searchPathsOption;
