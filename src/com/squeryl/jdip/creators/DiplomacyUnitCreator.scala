@@ -56,26 +56,6 @@ object DiplomacyUnitCreator {
 	  )
 	  
 	  
-	  for (searchPaths <- searchPathsOption;
-		   variantFilename <- variantFilenameOption;
-		   	_ <- searchPaths.find((directoryPath: String) =>{
-		   	  val searchDirectory = new java.io.File(directoryPath)
-		   	  searchDirectory.exists() && searchDirectory.isDirectory()
-		   	})
-	  ) yield {
-	    
-	  }
-	  val fileFoundOption = searchPathsOption.flatMap((u: Seq[String]) => {
-	    u.find((v: String) => {
-	      val searchDirectory = new java.io.File(v)
-	      searchDirectory.exists() && searchDirectory.isDirectory() && 
-	      	searchDirectory.listFiles().find((f: java.io.File) => {
-	      	  f.getName().equals("")
-	      	})
-	      
-	    })
-	  })
-	  
 	  <a></a>
 	}  
 	  
