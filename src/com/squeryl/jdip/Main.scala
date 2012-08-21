@@ -14,7 +14,6 @@ import com.squeryl.jdip.tables._
 import com.squeryl.jdip.creators._
 import com.squeryl.jdip.schemas.Jdip
 import com.squeryl.jdip.creators.DiplomacyUnitCreator
-import com.squeryl.jdip.creators.DiplomacyUnitCreator$
 
 object Main {
 	
@@ -71,13 +70,17 @@ object Main {
           ) yield {
             update(Jdip.games)((g: Game) => where(g.id === g1.id)
                 set(g.gameState := GameState.ACTIVE))
-            val diplomacyUnits = DiplomacyUnitCreator.getDiplomacyUnits(gamePlayerEmpires, gameTime)
+            
+            val diplomacyUnits = DiplomacyUnitCreator.getDiplomacyUnits(gamePlayerEmpires, 
+            	gameTime, ConfigXMLLoader.findFirstVariant)
             diplomacyUnits map (u => Jdip.diplomacyUnits.insert(u))
             0
           }  
         }
     }
   }
+  
+ 
   
   def main(args: Array[String]): Unit = {
     
@@ -94,8 +97,28 @@ object Main {
       Jdip.drop
     }
     
+    var username: Option[String] = None
+    var password: Option[String] = None
+    var configFile: Option[String] = None
+    var dropOnlyFlag: Option[String] = args.find(_.equals("-dropOnly"))
+    
+    for ( usernameFlag <- args.find(_.equals("-u"));
+          passwordFlag <- args.find(_.equals("-p"));
+          configFileFlag <- args.find(_.equals("-c"))
+    ) yield {
+      username = Some(args.apply(args.indexOf(usernameFlag) + 1))
+      password = Some(args.apply(args.indexOf(passwordFlag) + 1))
+      configFile = Some(args.apply(args.indexOf(configFileFlag) + 1))
+      Unit
+    }
+    
+    for (
+    		
+    )
+    
     Some(Unit).flatMap(_ => {
-      println("Terminate program in dropOnly mode")
+      
+      
       if (args.length >= 3 && args(2).equalsIgnoreCase("dropOnly")) None
       else Some(Unit) 
     }).map(_ => {
@@ -110,4 +133,6 @@ object Main {
     sys.exit(0)
   }
 
+  
+  
 }
