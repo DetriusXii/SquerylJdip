@@ -21,12 +21,13 @@ object Main {
    * @param args the command line arguments
    */
   
-  private def insertIntoTables(args: Array[String]): Unit = {
+  private def insertIntoTables(username: String, 
+      password: String, configFilepath: String): Unit = {
     transaction {
       EmpireCreator.empireList map (Jdip.empires.insert(_))
       PlayerCreator.playersList map (Jdip.players.insert(_))
       ProvinceCreator.getProvinceList map (Jdip.provinces.insert(_))
-      Jdip.players.insert(new Player("DetriusXii", args(1)))
+      Jdip.players.insert(new Player("DetriusXii", password))
       Season.getSeasons map (Jdip.seasons.insert(_))
       Phase.getPhases map (Jdip.phases.insert(_))
       
@@ -93,41 +94,46 @@ object Main {
             args(1)), new RevisedPostgreSqlAdapter)
       })
     
-    transaction {
-      Jdip.drop
-    }
-    
-    var username: Option[String] = None
-    var password: Option[String] = None
-    var configFile: Option[String] = None
+    var usernameOption: Option[String] = None
+    var passwordOption: Option[String] = None
+    var configFileOption: Option[String] = None
     var dropOnlyFlag: Option[String] = args.find(_.equals("-dropOnly"))
     
     for ( usernameFlag <- args.find(_.equals("-u"));
           passwordFlag <- args.find(_.equals("-p"));
           configFileFlag <- args.find(_.equals("-c"))
     ) yield {
-      username = Some(args.apply(args.indexOf(usernameFlag) + 1))
-      password = Some(args.apply(args.indexOf(passwordFlag) + 1))
-      configFile = Some(args.apply(args.indexOf(configFileFlag) + 1))
+      usernameOption = Some(args.apply(args.indexOf(usernameFlag) + 1))
+      passwordOption = Some(args.apply(args.indexOf(passwordFlag) + 1))
+      configFileOption = Some(args.apply(args.indexOf(configFileFlag) + 1))
       Unit
     }
     
-    for (
-    		
-    )
+    SessionFactory.concreteFactory = for ( username <- usernameOption;
+	  password <- passwordOption;
+	  configFile <- configFileOption
+    ) yield (() => Session.create(
+    		java.sql.DriverManager.getConnection("jdbc:postgresql:postgres",
+    		  username,
+    		  password),
+    		  new RevisedPostgreSqlAdapter
+		  )
+	)
+	
+	transaction {
+      Jdip.drop
+    }
     
-    Some(Unit).flatMap(_ => {
-      
-      
-      if (args.length >= 3 && args(2).equalsIgnoreCase("dropOnly")) None
-      else Some(Unit) 
-    }).map(_ => {
-      transaction {
-        Jdip.create
-      } 
-    }).map(_ => {
-      insertIntoTables(args)
-    })
+    usernameOption.flatMap(username => 
+      passwordOption.flatMap(password => 
+    	configFileOption.flatMap(configFile =>
+    		dropOnlyFlag match {
+    		  case Some(u) => None
+    		  case None => Some(insertIntoTables(username, password, configFile))
+    		}
+    	)
+    ))
+	
     
     println("The program terminated successfully")
     sys.exit(0)
