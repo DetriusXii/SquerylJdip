@@ -11,6 +11,7 @@ object ConfigXMLLoader {
 	val VALUE_TAGNAME = "value"
 	val VARIANTS_XML_SEARCHPATHS = "VARIANTS_XML_SEARCHPATHS"
 	val VARIANT_FILENAME = "VARIANT_FILENAME"
+	val JDIP_MAP_SVG_FILENAME = "JDIP_MAP_SVG_FILENAME"
 	  
 	 def findFirstVariant(configFilepath: String) : Elem = {
 	  val configuration = XML.load(configFilepath)
@@ -49,5 +50,34 @@ object ConfigXMLLoader {
 	    case Some(u: String) => XML.load(u)
 	    case None => <a></a>
 	  }
-	}  
+	}
+	
+	def findFirstSVG(configFilepath: String): Option[Elem] = {
+	  val configuration = XML.load(configFilepath)
+	  val appsettingNodeSeq = configuration \\ APPSETTING_TAGNAME
+	  
+	  val searchPathsListT = appsettingNodeSeq.find(_.child.exists(u => 
+	    u.label.equals(NAME_TAGNAME) && u.text.equals(VARIANTS_XML_SEARCHPATHS)
+	  )).map(_ \\ VALUE_TAGNAME map (_.text)) match {
+	    case Some(u: Seq[_]) => u.foldRight(ListT.empty[Option, String])((u, v) => u :: v)
+	    case None => ListT[Option, String](None)
+	  }
+	  
+	  val svgFilenamesListT = appsettingNodeSeq.find(_.child.exists(u => 
+	  	u.label.equals(NAME_TAGNAME) && u.text.equals(JDIP_MAP_SVG_FILENAME)
+	  )).map(_ \\ VALUE_TAGNAME map (_.text)) match {
+	    case Some(u: Seq[_]) => u.foldRight(ListT.empty[Option, String])((u, v) => u :: v)
+	    case None => ListT[Option, String](None)
+	  }
+	  
+	  val absoluteListT = for ( searchPath <- searchPathsListT;
+			  svgFilename <- svgFilenamesListT;
+			  searchFile <- new File(searchPath) :: ListT.empty[Option, File] if 
+			  	searchFile.exists && searchFile.isDirectory && searchFile.list.exists((filename: String) => 
+			  		filename.equals(svgFilename)
+			  	) ) yield (new File(searchFile))
+			  	
+	  )
+	  None
+	}
 }

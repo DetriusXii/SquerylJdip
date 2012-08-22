@@ -96,6 +96,7 @@ object Main {
     
     var usernameOption: Option[String] = None
     var passwordOption: Option[String] = None
+    var databaseOption: Option[String] = None
     var configFileOption: Option[String] = None
     var dropOnlyFlag: Option[String] = args.find(_.equals("-dropOnly"))
     
@@ -109,7 +110,8 @@ object Main {
       Unit
     }
     
-    SessionFactory.concreteFactory = for ( username <- usernameOption;
+    SessionFactory.concreteFactory = for ( 
+      username <- usernameOption;
 	  password <- passwordOption;
 	  configFile <- configFileOption
     ) yield (() => Session.create(
@@ -135,7 +137,6 @@ object Main {
     		}).flatMap((v: Unit) => Some(insertIntoTables(username, password, configFile)))
     	)
     ))
-	
     
     println("The program terminated successfully")
     sys.exit(0)

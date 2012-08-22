@@ -29,10 +29,11 @@ object DiplomacyUnitCreator {
 	    case _ => false
 	  })
 	  
-	  val variantElem = variantNode match {
+	  val variantElem = variantNode.flatMap(_ match {
 	    case u: Elem => Some(u)
 	    case _ => None
-	  }
+	  })
+	  
 	  
 	  
 	  variantElem.flatMap((u: Elem) => {
