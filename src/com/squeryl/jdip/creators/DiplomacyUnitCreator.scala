@@ -21,10 +21,13 @@ object DiplomacyUnitCreator {
 						  gameTime: GameTime,
 						  variantsXML: Elem): Iterable[DiplomacyUnit] = {
 	  
-	  val variantNode = (variantsXML \\ VARIANT_TAGNAME).filter(_ match {
-	    case u: Elem => u.attribute(NAME_ATTRIBUTE).toString.equals(STANDARD_VARIANT_NAME)
+	  val variantNode = (variantsXML \\ VARIANT_TAGNAME).find(_ match {
+	    case u: Elem => u.attribute(NAME_ATTRIBUTE) match {
+	      case Some(u) => u.toString.equals(STANDARD_VARIANT_NAME)
+	      case _ => false
+	    }
 	    case _ => false
-	  }).head
+	  })
 	  
 	  val variantElem = variantNode match {
 	    case u: Elem => Some(u)

@@ -6,15 +6,14 @@ import java.io.File
 
 
 object ConfigXMLLoader {
-	val CONFIG_FILENAME = "config.xml"
 	val APPSETTING_TAGNAME =  "appsetting"
 	val NAME_TAGNAME = "name"
 	val VALUE_TAGNAME = "value"
 	val VARIANTS_XML_SEARCHPATHS = "VARIANTS_XML_SEARCHPATHS"
 	val VARIANT_FILENAME = "VARIANT_FILENAME"
 	  
-	 def findFirstVariant : Elem = {
-	  val configuration = XML.load(CONFIG_FILENAME)
+	 def findFirstVariant(configFilepath: String) : Elem = {
+	  val configuration = XML.load(configFilepath)
 	  val appsettingNodeseq = configuration \\ APPSETTING_TAGNAME
 	  
 	  val searchPathsListT = appsettingNodeseq.find(_.child.exists(u => {

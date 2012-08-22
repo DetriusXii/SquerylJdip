@@ -73,7 +73,7 @@ object Main {
                 set(g.gameState := GameState.ACTIVE))
             
             val diplomacyUnits = DiplomacyUnitCreator.getDiplomacyUnits(gamePlayerEmpires, 
-            	gameTime, ConfigXMLLoader.findFirstVariant)
+            	gameTime, ConfigXMLLoader.findFirstVariant(configFilepath))
             diplomacyUnits map (u => Jdip.diplomacyUnits.insert(u))
             0
           }  
@@ -127,10 +127,12 @@ object Main {
     usernameOption.flatMap(username => 
       passwordOption.flatMap(password => 
     	configFileOption.flatMap(configFile =>
-    		dropOnlyFlag match {
+    		(dropOnlyFlag match {
     		  case Some(u) => None
-    		  case None => Some(insertIntoTables(username, password, configFile))
-    		}
+    		  case None => Some(transaction {
+    		    Jdip.create
+    		  })
+    		}).flatMap((v: Unit) => Some(insertIntoTables(username, password, configFile)))
     	)
     ))
 	
