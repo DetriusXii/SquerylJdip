@@ -4,15 +4,12 @@ import scala.xml._
 import com.squeryl.jdip.tables.Province
 
 object ProvinceCreator {
-	val JDIP_MAP_SVG_FILENAME: String = "/home/detriusxiiuser/jdip/variants/stdVariants/egdipmap.svg"
 	val PROVINCE_TAGNAME =  "PROVINCE"
 	val SUPPLY_CENTER_TAGNAME = "SUPPLY_CENTER"
 	val NAME_ATTRIBUTE = "name"
 	val BAD_XML_DATA_MESSAGE = "Province XML node data is not well formed"
 	  
-	def getProvinceList: Iterable[Province] = {
-	  val jdipMapSVG = XML.load(JDIP_MAP_SVG_FILENAME)
-	  
+	def getProvinceList(jdipMapSVG: Elem): Iterable[Province] = {
 	  (jdipMapSVG \\ PROVINCE_TAGNAME) map ((provinceNode: Node) => {
 	    val supplyCenterNodeExists = provinceNode.child.exists(_ match {
 	      case elem: Elem => elem.label.equals(SUPPLY_CENTER_TAGNAME)

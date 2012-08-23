@@ -26,7 +26,11 @@ object Main {
     transaction {
       EmpireCreator.empireList map (Jdip.empires.insert(_))
       PlayerCreator.playersList map (Jdip.players.insert(_))
-      ProvinceCreator.getProvinceList map (Jdip.provinces.insert(_))
+      ConfigXMLLoader.findFirstSVG(configFilepath) match {
+        case Some(u: scala.xml.Elem) => ProvinceCreator.getProvinceList(u) map (Jdip.provinces.insert(_))
+        case _ => throw new Exception
+      }
+      
       Jdip.players.insert(new Player("DetriusXii", password))
       Season.getSeasons map (Jdip.seasons.insert(_))
       Phase.getPhases map (Jdip.phases.insert(_))

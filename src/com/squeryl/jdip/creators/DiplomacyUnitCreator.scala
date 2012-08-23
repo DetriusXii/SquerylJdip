@@ -42,8 +42,8 @@ object DiplomacyUnitCreator {
 	    	(0 until initialStateProjection.length) zip initialStateProjection
 	    val diplomacyUnitListOption = unitNumberWithInitialStateProjection map (_ match {
 	      case (unitNumber: Int, initialStateElem: Elem) => 
-	        for (province <- u.attribute(PROVINCE_ATTRIBUTE);
-				  power <- u.attribute(POWER_ATTRIBUTE);
+	        for (province <- initialStateElem.attribute(PROVINCE_ATTRIBUTE);
+				  power <- initialState.attribute(POWER_ATTRIBUTE);
 				  unitType <- u.attribute(UNIT_ATTRIBUTE);
 				  unitCoast <- u.attribute(UNITCOAST_ATTRIBUTE);
 				  owner <- gamePlayerEmpires.find(gpe => gpe.empireName.equals(power.toString))
@@ -53,7 +53,7 @@ object DiplomacyUnitCreator {
 			    case None => province.toString
 			  }
 			  new DiplomacyUnit(unitType.toString, owner.id, location, unitNumber, gameTime.id)
-			}
+	        }
 	      case _ => None
 	    })
 	    Some(diplomacyUnitListOption.flatten)

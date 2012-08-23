@@ -70,14 +70,14 @@ object ConfigXMLLoader {
 	    case None => ListT[Option, String](None)
 	  }
 	  
-	  val absoluteListT = for ( searchPath <- searchPathsListT;
+	  val absolutePathsListT = for ( searchPath <- searchPathsListT;
 			  svgFilename <- svgFilenamesListT;
 			  searchFile <- new File(searchPath) :: ListT.empty[Option, File] if 
 			  	searchFile.exists && searchFile.isDirectory && searchFile.list.exists((filename: String) => 
 			  		filename.equals(svgFilename)
-			  	) ) yield (new File(searchFile))
-			  	
-	  )
-	  None
+			  	) ) yield ((new File(searchFile, svgFilename)).getAbsolutePath
+			  	)
+	  
+	  absolutePathsListT.head.map(XML.load(_))
 	}
 }
