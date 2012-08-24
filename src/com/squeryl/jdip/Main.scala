@@ -28,7 +28,7 @@ object Main {
       PlayerCreator.playersList map (Jdip.players.insert(_))
       ConfigXMLLoader.findFirstSVG(configFilepath) match {
         case Some(u: scala.xml.Elem) => ProvinceCreator.getProvinceList(u) map (Jdip.provinces.insert(_))
-        case _ => throw new Exception
+        case _ => throw new Exception("Did I crash here?")
       }
       
       Jdip.players.insert(new Player("DetriusXii", password))
@@ -76,7 +76,8 @@ object Main {
             update(Jdip.games)((g: Game) => where(g.id === g1.id)
                 set(g.gameState := GameState.ACTIVE))
             
-            val diplomacyUnits = DiplomacyUnitCreator.getDiplomacyUnits(gamePlayerEmpires, 
+            val diplomacyUnits = DiplomacyUnitCreator.getDiplomacyUnits(gamePlayerEmpires,
+                UnitType.getUnitTypes,
             	gameTime, ConfigXMLLoader.findFirstVariant(configFilepath))
             diplomacyUnits map (u => Jdip.diplomacyUnits.insert(u))
             0

@@ -4,6 +4,7 @@ import com.squeryl.jdip.tables.DiplomacyUnit
 import scalaz._
 import com.squeryl.jdip.tables.GamePlayerEmpire
 import com.squeryl.jdip.tables.GameTime
+import com.squeryl.jdip.tables.UnitType
 import java.io.File
 
 object DiplomacyUnitCreator {
@@ -17,11 +18,12 @@ object DiplomacyUnitCreator {
 	val VARIANT_TAGNAME = "VARIANT"
 	
 	  
-	def getDiplomacyUnits(gamePlayerEmpires: Iterable[GamePlayerEmpire], 
+	def getDiplomacyUnits(gamePlayerEmpires: Iterable[GamePlayerEmpire],
+						  unitTypes: Iterable[UnitType],
 						  gameTime: GameTime,
 						  variantsXML: Elem): Iterable[DiplomacyUnit] = {
 	  
-	  val variantNode = (variantsXML \\ VARIANT_TAGNAME).find(_ match {
+	  val variantNodeOption = (variantsXML \\ VARIANT_TAGNAME).find(_ match {
 	    case u: Elem => u.attribute(NAME_ATTRIBUTE) match {
 	      case Some(u) => u.toString.equals(STANDARD_VARIANT_NAME)
 	      case _ => false
@@ -29,36 +31,27 @@ object DiplomacyUnitCreator {
 	    case _ => false
 	  })
 	  
-	  val variantElem = variantNode.flatMap(_ match {
-	    case u: Elem => Some(u)
-	    case _ => None
-	  })
-	  
-	  
-	  
-	  variantElem.flatMap((u: Elem) => {
-	    val initialStateProjection = u \\ INITIALSTATE_TAGNAME
+	  variantNodeOption.map((variantNode: scala.xml.Node) => {
+	    val initialStateProjection = variantNode \\INITIALSTATE_TAGNAME
 	    val unitNumberWithInitialStateProjection = 
-	    	(0 until initialStateProjection.length) zip initialStateProjection
-	    val diplomacyUnitListOption = unitNumberWithInitialStateProjection map (_ match {
-	      case (unitNumber: Int, initialStateElem: Elem) => 
+	      (0 until initialStateProjection.length) zip initialStateProjection
+	    unitNumberWithInitialStateProjection map (_ match {
+	      case (unitNumber: Int, initialStateElem: Elem) =>
 	        for (province <- initialStateElem.attribute(PROVINCE_ATTRIBUTE);
-				  power <- initialState.attribute(POWER_ATTRIBUTE);
-				  unitType <- u.attribute(UNIT_ATTRIBUTE);
-				  unitCoast <- u.attribute(UNITCOAST_ATTRIBUTE);
-				  owner <- gamePlayerEmpires.find(gpe => gpe.empireName.equals(power.toString))
-			) yield {
-			  val location = u.attribute(UNITCOAST_ATTRIBUTE) match {
-			    case Some(coast) => "%s-%s" format (province.toString, coast.toString)
-			    case None => province.toString
-			  }
-			  new DiplomacyUnit(unitType.toString, owner.id, location, unitNumber, gameTime.id)
+	        	power <- initialStateElem.attribute(POWER_ATTRIBUTE);
+	        	unitType <- initialStateElem.attribute(UNIT_ATTRIBUTE);
+	        	owner <- gamePlayerEmpires.find(gpe => gpe.empireName.equalsIgnoreCase(power.toString));
+	        	correctedUnitType <- unitTypes.find(ut => ut.id.equalsIgnoreCase(unitType.toString))
+	        ) yield {
+	          val location = initialStateElem.attribute(UNITCOAST_ATTRIBUTE) match {
+	            case Some(coast) => "%s-%s" format (province.toString, coast.toString)
+	            case None => province.toString
+	          }
+	          new DiplomacyUnit(correctedUnitType.id, owner.id, location, unitNumber, gameTime.id)
 	        }
-	      case _ => None
 	    })
-	    Some(diplomacyUnitListOption.flatten)
 	  }) match {
-	    case Some (u) => u
+	    case Some(u) => u.flatten
 	    case None => Nil
 	  }
 	}

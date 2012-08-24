@@ -22,7 +22,7 @@ object Jdip extends PostgreSchema("jdip") {
    val gameStates = table[GameState]("game_states", schemaName)
    val messages = table[Message]("messages", schemaName)
    val provinces = table[Province]("provinces", schemaName)
-   val diplomacyUnits = table[DiplomacyUnit]("diplomacy_unit", schemaName)
+   val diplomacyUnits = table[DiplomacyUnit]("diplomacy_units", schemaName)
   
   val gamePlayers = 
      manyToManyRelation(games, players, "game_player", schemaName).

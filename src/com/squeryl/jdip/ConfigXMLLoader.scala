@@ -2,7 +2,7 @@ package com.squeryl.jdip
 import scala.xml._
 import scalaz._
 import java.io.File
-
+import javax.xml.parsers._
 
 
 object ConfigXMLLoader {
@@ -78,6 +78,7 @@ object ConfigXMLLoader {
 			  	) ) yield ((new File(searchFile, svgFilename)).getAbsolutePath
 			  	)
 	  
-	  absolutePathsListT.head.map(XML.load(_))
+	  val saxParser = SAXParserFactory.newInstance.newSAXParser
+	  absolutePathsListT.head.map(XML.withSAXParser(saxParser).load(_))
 	}
 }
