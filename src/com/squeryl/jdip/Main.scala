@@ -41,6 +41,8 @@ object Main {
       OrderType.getOrderTypes map (Jdip.orderTypes.insert(_))
       GameState.getGameStates map (Jdip.gameStates.insert(_))
     
+      OrderTypeUnitType.getOrderTypeUnitTypes map (Jdip.orderTypeUnitTypes.insert(_))
+      
       val firstGameTime = from(Jdip.gameTimes)(gt => where(
           gt.gameYear === GameTime.MIN_GAME_YEAR and
           gt.gameSeason === Season.SPRING.seasonName and
@@ -83,6 +85,7 @@ object Main {
             0
           }  
         }
+      
     }
   }
   

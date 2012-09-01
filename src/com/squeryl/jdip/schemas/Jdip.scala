@@ -25,15 +25,20 @@ object Jdip extends PostgreSchema("jdip") {
    val diplomacyUnits = table[DiplomacyUnit]("diplomacy_units", schemaName)
   
   val gamePlayers = 
-     manyToManyRelation(games, players, "game_player", schemaName).
+     manyToManyRelation(games, players, "game_players", schemaName).
       via[GamePlayer]((g,p,gp) => 
          (g.id === gp.gameName, p.id === gp.playerName)
        ) 
        
-  val gamePlayerEmpires = manyToManyRelation(gamePlayers, empires, "game_player_empire", schemaName).
+  val gamePlayerEmpires = manyToManyRelation(gamePlayers, empires, "game_player_empires", schemaName).
     via[GamePlayerEmpire]((gamePlayers, empires, gpe) => 
       (gamePlayers.id === gpe.gamePlayerKey, empires.id === gpe.empireName)
     )
+    
+  val orderTypeUnitTypes = manyToManyRelation(orderTypes, unitTypes, "order_type_unit_types", schemaName).
+  	via[OrderTypeUnitType]((ot, ut, otut) =>
+  		(ot.id === otut.orderType, ut.id === otut.unitType)
+  	)
   
   val gtSeasonForeignKey = oneToManyRelation(seasons, gameTimes).via((s, gt) => s.id === gt.gameSeason)
   val gtPhaseForeignKey = oneToManyRelation(phases, gameTimes).via((p, gt) => p.id === gt.gamePhase)
@@ -54,6 +59,10 @@ object Jdip extends PostgreSchema("jdip") {
       gpr.id === m.receiverId
     )
  
+  val phaseOrderTypesForeignKey = oneToManyRelation(phases, orderTypes).via((ph, ot) => 
+  		ph.id === ot.phase
+  )  
+    
   val gamePlayerEmpiresOrdersForeignKey = 
     oneToManyRelation(gamePlayerEmpires, orders).via((gpr, o) => {
         gpr.id === o.gamePlayer

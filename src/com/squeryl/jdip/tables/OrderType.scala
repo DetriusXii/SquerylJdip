@@ -7,8 +7,8 @@ package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
 
-class OrderType(val id: String) extends KeyedEntity[String] {
-  def this() = this("")
+class OrderType(val id: String, val phase: String) extends KeyedEntity[String] {
+  def this() = this("", "")
 }
 
 object OrderType {
@@ -19,9 +19,16 @@ object OrderType {
   val HOLD = "HOLD"
   val CONSTRUCT = "Construct"
   val DISBAND = "Disband"
-  val RETREAT = "Retreat"
-  
-  def getOrderTypes = 
-    MOVE :: SUPPORT_MOVE :: SUPPORT_HOLD :: CONVOY :: HOLD :: CONSTRUCT :: DISBAND :: RETREAT :: Nil map
-    (new OrderType(_))
+  val RETREAT = "Retreat"    
+    
+  def getOrderTypes = (MOVE, Phase.MOVEMENT) :: 
+		(SUPPORT_MOVE, Phase.MOVEMENT) :: 
+	    (SUPPORT_HOLD, Phase.MOVEMENT) :: 
+	    (HOLD, Phase.MOVEMENT) :: 
+	    (CONVOY, Phase.MOVEMENT) ::
+	    (CONSTRUCT, Phase.BUILD) :: 
+	    (DISBAND, Phase.BUILD) :: 
+	    (RETREAT, Phase.RETREAT) :: Nil map ((u: Tuple2[String, String]) => 
+	    	new OrderType(u._1, u._2)
+	    )
 }
