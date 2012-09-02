@@ -16,7 +16,7 @@ object OrderType {
   val SUPPORT_MOVE = "Support Move"
   val SUPPORT_HOLD = "Support Hold"
   val CONVOY = "Convoy"
-  val HOLD = "HOLD"
+  val HOLD = "Hold"
   val CONSTRUCT = "Construct"
   val DISBAND = "Disband"
   val RETREAT = "Retreat"    

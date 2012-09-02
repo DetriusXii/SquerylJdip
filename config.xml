@@ -16,4 +16,8 @@
 		<name>JDIP_MAP_SVG_FILENAME</name>
 		<value>egdipmap.svg</value>
 	</appsetting>
+	<appsetting>
+		<name>ADJACENCY_FILENAME</name>
+		<value>std_adjacency.xml</value>
+	</appsetting>
 </configuration>
