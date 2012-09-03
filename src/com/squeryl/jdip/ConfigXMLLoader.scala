@@ -12,6 +12,7 @@ object ConfigXMLLoader {
 	val VARIANTS_XML_SEARCHPATHS = "VARIANTS_XML_SEARCHPATHS"
 	val VARIANT_FILENAME = "VARIANT_FILENAME"
 	val JDIP_MAP_SVG_FILENAME = "JDIP_MAP_SVG_FILENAME"
+	val ADJACENCY_FILENAME = "ADJACENCY_FILENAME"
 	  
 	 def findFirstVariant(configFilepath: String) : Elem = {
 	  val configuration = XML.load(configFilepath)
@@ -80,5 +81,33 @@ object ConfigXMLLoader {
 	  
 	  val saxParser = SAXParserFactory.newInstance.newSAXParser
 	  absolutePathsListT.head.map(XML.withSAXParser(saxParser).load(_))
+	}
+	
+	def findFirstAdjacency(configFilepath: String): Option[Elem] = {
+	  val configuration = XML.load(configFilepath)
+	  val appsettingNodeSeq = configuration \\ APPSETTING_TAGNAME
+	  
+	  val searchPathsListT = appsettingNodeSeq.find(_.child.exists(u =>
+	  	u.label.equals(NAME_TAGNAME) && u.text.equals(VARIANTS_XML_SEARCHPATHS)
+	  )).map(_ \\ VALUE_TAGNAME map (_.text)) match {
+	    case Some(u: Seq[_]) => u.foldRight(ListT.empty[Option, String])((u, v) => u :: v)
+	    case None => ListT[Option, String](None)
+	  }
+	  
+	  val adjacencyFilenamesListT = appsettingNodeSeq.find(_.child.exists(u =>
+	  	u.label.equals(NAME_TAGNAME) && u.text.equals(ADJACENCY_FILENAME)
+	  )).map(_ \\ VALUE_TAGNAME map (_.text)) match {
+	    case Some(u: Seq[_]) => u.foldRight(ListT.empty[Option, String])((u, v) => u :: v)
+	    case None => ListT[Option, String](None)
+	  }
+	  
+	  val absolutePathsListT = for (searchPath <- searchPathsListT;
+			  adjacencyFilename <- adjacencyFilenamesListT;
+			  searchFile <- new File(searchPath) :: ListT.empty[Option, File] if
+			  	searchFile.exists && searchFile.isDirectory && searchFile.list.exists((filename: String) =>
+			  		filename.equals(adjacencyFilename)
+			  	)) yield ((new File(searchFile, adjacencyFilename)).getAbsolutePath)
+			  	
+	  absolutePathsListT.head.map(XML.load(_))
 	}
 }
