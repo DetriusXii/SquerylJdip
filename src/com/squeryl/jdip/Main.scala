@@ -31,6 +31,7 @@ object Main {
         case _ => throw new Exception("Did I crash here?")
       }
       
+      
       Jdip.players.insert(new Player("DetriusXii", password))
       Season.getSeasons map (Jdip.seasons.insert(_))
       Phase.getPhases map (Jdip.phases.insert(_))
@@ -42,6 +43,12 @@ object Main {
       GameState.getGameStates map (Jdip.gameStates.insert(_))
     
       OrderTypeUnitType.getOrderTypeUnitTypes map (Jdip.orderTypeUnitTypes.insert(_))
+      
+      
+      ConfigXMLLoader.findFirstAdjacency(configFilepath) match {
+        case Some(u: scala.xml.Elem) => AdjacencyCreator.getAdjacencies(u) map (Jdip.adjacencies.insert(_))
+        case _ => throw new Exception("Did I crash in the adjacencies?")
+      }
       
       val firstGameTime = from(Jdip.gameTimes)(gt => where(
           gt.gameYear === GameTime.MIN_GAME_YEAR and

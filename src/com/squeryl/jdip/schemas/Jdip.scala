@@ -23,7 +23,7 @@ object Jdip extends PostgreSchema("jdip") {
    val messages = table[Message]("messages", schemaName)
    val provinces = table[Province]("provinces", schemaName)
    val diplomacyUnits = table[DiplomacyUnit]("diplomacy_units", schemaName)
-  
+   
   val gamePlayers = 
      manyToManyRelation(games, players, "game_players", schemaName).
       via[GamePlayer]((g,p,gp) => 
@@ -40,6 +40,10 @@ object Jdip extends PostgreSchema("jdip") {
   		(ot.id === otut.orderType, ut.id === otut.unitType)
   	)
   
+  val adjacencies = manyToManyRelation(provinces, provinces, "adjacencies", schemaName).via[Adjacency](
+      (p1, p2, adjacency) => (p1.id === adjacency.srcProvince, p2.id === adjacency.dstProvince)
+  )	
+  	
   val gtSeasonForeignKey = oneToManyRelation(seasons, gameTimes).via((s, gt) => s.id === gt.gameSeason)
   val gtPhaseForeignKey = oneToManyRelation(phases, gameTimes).via((p, gt) => p.id === gt.gamePhase)
   
@@ -84,7 +88,12 @@ object Jdip extends PostgreSchema("jdip") {
     ut.id === dpu.unitType
   })
   
+  val adjUnitTypeForeignKey = oneToManyRelation(unitTypes, adjacencies).via(
+      (ut, adj) => ut.id === adj.unitType
+  )
+  
   on(diplomacyUnits)(dpu => declare(
 		  columns(dpu.owner, dpu.unitNumber, dpu.gameTime) are(unique)
   ))
+  
 }
