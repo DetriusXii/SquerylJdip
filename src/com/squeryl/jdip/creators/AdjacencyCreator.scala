@@ -57,6 +57,20 @@ object AdjacencyCreator {
 	  Map(shortNameProvinceNameList: _*)
 	}
 	
+	def getNeighbourNameToProvinceNameMap(sNameToProvNameMap: Map[String, String],
+										 neighbourName: String): Option[String] = {
+		if (neighbourName.contains("-")) {
+	      val shortName = neighbourName.split("-")(0)
+	      val coast = neighbourName.split("-")(1)
+	      
+	      sNameToProvNameMap.get(shortName).map(String.format("%s-%s", _, coast))
+	    } else {
+	      sNameToProvNameMap.get(neighbourName)
+	    }  
+	  
+	}
+	
+	
 	def getAdjacencies(adjacencyXML: Elem, provinces: Iterable[Province]): Iterable[Adjacency] = {
 	  val provincesNodeSeq = adjacencyXML \\ PROVINCE_TAGNAME
 	  val optionTTrait = new OptionTs {}
@@ -71,7 +85,8 @@ object AdjacencyCreator {
 		provinceName <- optionTTrait.optionT[Seq].apply((shortNameToProvinceNameMap.get(shortName) :: Nil));
 		coastType <- optionTTrait.optionT[Seq].apply(adjacencyNode.attribute(TYPE_ATTRIBUTE) :: Nil);
 		neighbour <- getNeighbours(adjacencyNode);
-		neighbourProvince <- optionTTrait.optionT[Seq].apply(shortNameToProvinceNameMap.get(neighbour) :: Nil)
+		neighbourProvince <- optionTTrait.optionT[Seq].apply(
+		    getNeighbourNameToProvinceNameMap(shortNameToProvinceNameMap, neighbour) :: Nil)
 	  ) yield (
 	    coastType.toString match {
 	      case LAND_TYPE => new Adjacency(provinceName, neighbourProvince, UnitType.ARMY)
