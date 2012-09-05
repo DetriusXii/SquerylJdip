@@ -22,6 +22,15 @@ object ProvinceCreator {
 	    case _ => false
 	  })
 	}
+	
+	def hasCoast(provinceNode: scala.xml.Node): Boolean = {
+	  val adjacencyNodeSeq = provinceNode \\ ADJACENCY_TAGNAME
+	  
+	  adjacencyNodeSeq.exists(_.attribute(TYPE_ATTRIBUTE).map(_.toString) match {
+	    case Some(ALL_COAST_TYPE) => true
+	    case _ => false
+	  })
+	}
 	  
 	def getProvinces(adjacencyList: scala.xml.Elem): Iterable[Province] = {
 	  val provinceNodeSeq: scala.xml.NodeSeq = adjacencyList \\ PROVINCE_TAGNAME
@@ -30,7 +39,7 @@ object ProvinceCreator {
 	    for (shortname <- provinceNode.attribute(SHORTNAME_ATTRIBUTE).map(_.toString);
 	    	 fullname <- provinceNode.attribute(FULLNAME_ATTRIBUTE).map(_.toString)
 	    ) yield {
-	      new Province(shortname, fullname, isLandProvince(provinceNode))
+	      new Province(shortname, fullname, isLandProvince(provinceNode), hasCoast(provinceNode))
 	    }
 	  }).flatten
 	}
