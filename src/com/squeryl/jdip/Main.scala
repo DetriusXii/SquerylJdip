@@ -46,7 +46,7 @@ object Main {
       
       
       ConfigXMLLoader.findFirstAdjacency(configFilepath) match {
-        case Some(u: scala.xml.Elem) => AdjacencyCreator.getAdjacencies(u) map (Jdip.adjacencies.insert(_))
+        case Some(u: scala.xml.Elem) => AdjacencyCreator.getAdjacencies(u, Jdip.provinces.toList) map (Jdip.adjacencies.insert(_))
         case _ => throw new Exception("Did I crash in the adjacencies?")
       }
       
