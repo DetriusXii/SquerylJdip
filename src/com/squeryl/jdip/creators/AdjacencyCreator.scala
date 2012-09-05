@@ -1,7 +1,7 @@
 package com.squeryl.jdip.creators
 
 import com.squeryl.jdip.tables.Adjacency
-import com.squeryl.jdip.tables.Province
+import com.squeryl.jdip.tables.Location
 import scala.xml._
 import scalaz._
 import com.squeryl.jdip.tables.UnitType
@@ -44,7 +44,7 @@ object AdjacencyCreator {
 	}
 	
 	def getShortNameToProvinceNameMap(provincesNodeSeq: NodeSeq, 
-	    provinces: Iterable[Province]): Map[String, String] = {
+	    provinces: Iterable[Location]): Map[String, String] = {
 	  
 	  val shortNameProvinceNameList = for (provinceNode <- provincesNodeSeq;
 	       shortName <- (provinceNode.attribute(SHORTNAME_ATTRIBUTE) :: Nil).flatten;
@@ -71,7 +71,7 @@ object AdjacencyCreator {
 	}
 	
 	
-	def getAdjacencies(adjacencyXML: Elem, provinces: Iterable[Province]): Iterable[Adjacency] = {
+	def getAdjacencies(adjacencyXML: Elem, provinces: Iterable[Location]): Iterable[Adjacency] = {
 	  val provincesNodeSeq = adjacencyXML \\ PROVINCE_TAGNAME
 	  val optionTTrait = new OptionTs {}
 	  val provincesNodeSeqOptionT: OptionT[Seq, scala.xml.Node] = 

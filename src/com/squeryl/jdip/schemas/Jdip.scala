@@ -21,7 +21,7 @@ object Jdip extends PostgreSchema("jdip") {
    val unitTypes = table[UnitType]("unit_types", schemaName)
    val gameStates = table[GameState]("game_states", schemaName)
    val messages = table[Message]("messages", schemaName)
-   val provinces = table[Province]("provinces", schemaName)
+   val locations = table[Location]("locations", schemaName)
    val diplomacyUnits = table[DiplomacyUnit]("diplomacy_units", schemaName)
    
   val gamePlayers = 
@@ -40,8 +40,8 @@ object Jdip extends PostgreSchema("jdip") {
   		(ot.id === otut.orderType, ut.id === otut.unitType)
   	)
   
-  val adjacencies = manyToManyRelation(provinces, provinces, "adjacencies", schemaName).via[Adjacency](
-      (p1, p2, adjacency) => (p1.id === adjacency.srcProvince, p2.id === adjacency.dstProvince)
+  val adjacencies = manyToManyRelation(locations, locations, "adjacencies", schemaName).via[Adjacency](
+      (l1, l2, adjacency) => (l1.id === adjacency.srcProvince, l2.id === adjacency.dstProvince)
   )	
   	
   val gtSeasonForeignKey = oneToManyRelation(seasons, gameTimes).via((s, gt) => s.id === gt.gameSeason)
@@ -81,8 +81,8 @@ object Jdip extends PostgreSchema("jdip") {
   val dpuOwnerForeignKey = oneToManyRelation(gamePlayerEmpires, diplomacyUnits).via((gpe, dpu) => {
     gpe.id === dpu.owner
   })
-  val dpuProvinceForeignKey = oneToManyRelation(provinces, diplomacyUnits).via((pr, dpu) => {
-    pr.id === dpu.unitLocation
+  val dpuProvinceForeignKey = oneToManyRelation(locations, diplomacyUnits).via((loc, dpu) => {
+    loc.id === dpu.unitLocation
   })
   val dpuUnitTypeForeignKey = oneToManyRelation(unitTypes, diplomacyUnits).via((ut, dpu) => {
     ut.id === dpu.unitType

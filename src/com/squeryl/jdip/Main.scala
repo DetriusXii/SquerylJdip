@@ -13,7 +13,7 @@ import org.squeryl.dsl.ast._
 import com.squeryl.jdip.tables._
 import com.squeryl.jdip.creators._
 import com.squeryl.jdip.schemas.Jdip
-import com.squeryl.jdip.creators.DiplomacyUnitCreator
+import com.squeryl.jdip.creators._
 
 object Main {
 	
@@ -27,7 +27,7 @@ object Main {
       EmpireCreator.empireList map (Jdip.empires.insert(_))
       PlayerCreator.playersList map (Jdip.players.insert(_))
       ConfigXMLLoader.findFirstSVG(configFilepath) match {
-        case Some(u: scala.xml.Elem) => ProvinceCreator.getProvinceList(u) map (Jdip.provinces.insert(_))
+        case Some(u: scala.xml.Elem) => LocationCreator.getLocationList(u) map (Jdip.locations.insert(_))
         case _ => throw new Exception("Did I crash here?")
       }
       
@@ -46,7 +46,7 @@ object Main {
       
       
       ConfigXMLLoader.findFirstAdjacency(configFilepath) match {
-        case Some(u: scala.xml.Elem) => AdjacencyCreator.getAdjacencies(u, Jdip.provinces.toList) map (Jdip.adjacencies.insert(_))
+        case Some(u: scala.xml.Elem) => AdjacencyCreator.getAdjacencies(u, Jdip.locations.toList) map (Jdip.adjacencies.insert(_))
         case _ => throw new Exception("Did I crash in the adjacencies?")
       }
       
