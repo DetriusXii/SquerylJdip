@@ -21,7 +21,9 @@ object Jdip extends PostgreSchema("jdip") {
    val unitTypes = table[UnitType]("unit_types", schemaName)
    val gameStates = table[GameState]("game_states", schemaName)
    val messages = table[Message]("messages", schemaName)
-   val locations = table[Location]("locations", schemaName)
+   val provinces = table[Province]("provinces", schemaName)
+   val coasts = table[Coast]("coasts", schemaName)
+   val uniqueProvinceNames = table[UniqueProvinceName]("unique_province_name", schemaName)
    val diplomacyUnits = table[DiplomacyUnit]("diplomacy_units", schemaName)
    
   val gamePlayers = 
@@ -40,8 +42,11 @@ object Jdip extends PostgreSchema("jdip") {
   		(ot.id === otut.orderType, ut.id === otut.unitType)
   	)
   
+  val locations	= manyToManyRelation(provinces, coasts, "locations", schemaName).
+  	via[Location]((pr, co, loc) => (pr.id === loc.province, co.id === loc.coast))
+  	
   val adjacencies = manyToManyRelation(locations, locations, "adjacencies", schemaName).via[Adjacency](
-      (l1, l2, adjacency) => (l1.id === adjacency.srcProvince, l2.id === adjacency.dstProvince)
+      (l1, l2, adjacency) => (l1.id === adjacency.srcLocation, l2.id === adjacency.dstLocation)
   )	
   	
   val gtSeasonForeignKey = oneToManyRelation(seasons, gameTimes).via((s, gt) => s.id === gt.gameSeason)
@@ -78,22 +83,26 @@ object Jdip extends PostgreSchema("jdip") {
         ut.id === o.unitType
     })
    
-  val dpuOwnerForeignKey = oneToManyRelation(gamePlayerEmpires, diplomacyUnits).via((gpe, dpu) => {
+  val uniProvinceForeignKey = oneToManyRelation(provinces, uniqueProvinceNames).via((pr, upn) =>
+  	pr.id === upn.provinceName
+  )  
+    
+  val dpuOwnerForeignKey = oneToManyRelation(gamePlayerEmpires, diplomacyUnits).via((gpe, dpu) => 
     gpe.id === dpu.owner
-  })
-  val dpuProvinceForeignKey = oneToManyRelation(locations, diplomacyUnits).via((loc, dpu) => {
-    loc.id === dpu.unitLocation
-  })
-  val dpuUnitTypeForeignKey = oneToManyRelation(unitTypes, diplomacyUnits).via((ut, dpu) => {
-    ut.id === dpu.unitType
-  })
-  
-  val adjUnitTypeForeignKey = oneToManyRelation(unitTypes, adjacencies).via(
-      (ut, adj) => ut.id === adj.unitType
   )
+  val dpuProvinceForeignKey = oneToManyRelation(locations, diplomacyUnits).via((loc, dpu) => 
+    loc.id === dpu.unitLocation
+  )
+  val dpuUnitTypeForeignKey = oneToManyRelation(unitTypes, diplomacyUnits).via((ut, dpu) => 
+    ut.id === dpu.unitType
+  )
+
   
   on(diplomacyUnits)(dpu => declare(
 		  columns(dpu.owner, dpu.unitNumber, dpu.gameTime) are(unique)
   ))
   
+  on(locations)((loc: Location) => declare(
+		  columns(loc.province, loc.coast) are(unique)
+  ))
 }

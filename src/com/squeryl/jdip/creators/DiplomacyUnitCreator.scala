@@ -2,9 +2,7 @@ package com.squeryl.jdip.creators
 import scala.xml._
 import com.squeryl.jdip.tables.DiplomacyUnit
 import scalaz._
-import com.squeryl.jdip.tables.GamePlayerEmpire
-import com.squeryl.jdip.tables.GameTime
-import com.squeryl.jdip.tables.UnitType
+import com.squeryl.jdip.tables._
 import java.io.File
 
 object DiplomacyUnitCreator {
@@ -17,9 +15,12 @@ object DiplomacyUnitCreator {
 	val UNITCOAST_ATTRIBUTE = "unitcoast"
 	val VARIANT_TAGNAME = "VARIANT"
 	
+	implicit def optionToOptionT[A](option: Option[A]) = 
+	  new OptionTs {}.optionT[Iterable].apply(option :: Nil)
 	  
 	def getDiplomacyUnits(gamePlayerEmpires: Iterable[GamePlayerEmpire],
 						  unitTypes: Iterable[UnitType],
+						  locations: Iterable[Location],
 						  gameTime: GameTime,
 						  variantsXML: Elem): Iterable[DiplomacyUnit] = {
 	  

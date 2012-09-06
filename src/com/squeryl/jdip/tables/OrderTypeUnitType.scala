@@ -1,9 +1,14 @@
 package com.squeryl.jdip.tables
 import org.squeryl.KeyedEntity
+import org.squeryl.dsl._
+import org.squeryl.PrimitiveTypeMode._
 
-class OrderTypeUnitType(val orderType: String, val unitType: String) extends KeyedEntity[Int] {
-	def this() = this("", "")
-	val id = 0
+class OrderTypeUnitType(val orderType: String, 
+    val unitType: String) extends KeyedEntity[CompositeKey2[String, String]] {
+	
+  def this() = this("", "")
+
+  def id = compositeKey(orderType, unitType)
 }
 
 object OrderTypeUnitType {

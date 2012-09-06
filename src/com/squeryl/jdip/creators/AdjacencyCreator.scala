@@ -16,84 +16,64 @@ object AdjacencyCreator {
 	val NAME_ATTRIBUTE = "name"
 	val LAND_TYPE = "mv"
 	val ALL_COAST_TYPE = "xc"
-	  
-	def getAdjacencyNodeSeqOptionT(provinceNode: scala.xml.Node): OptionT[Seq, scala.xml.Node] = {
+	
+	private def getAdjacencyNode(provinceNode: scala.xml.Node): OptionT[Iterable, scala.xml.Node] = {
 	  val optionTTrait = new OptionTs {}
-	  val adjacenciesNodeSeq = provinceNode \\ ADJACENCY_TAGNAME
+	  val adjacencyNodeSeq: scala.xml.NodeSeq =
+	    provinceNode \\ ADJACENCY_TAGNAME
 	  
-	  optionTTrait.optionT[Seq].apply(adjacenciesNodeSeq.map(Some(_)))
+	  optionTTrait.optionT[Iterable].apply(adjacencyNodeSeq.map(Some(_)).toList)
 	}
 	
-	def getNeighbours(adjacencyNode: scala.xml.Node): OptionT[Seq, String] = {
+	private def getNeighbours(adjacencyNode: scala.xml.Node): OptionT[Iterable, String] = {
 	  val optionTTrait = new OptionTs {}
-	  val refs = adjacencyNode.attribute(REFS_ATTRIBUTE) match {
-	    case Some(u) => u.toString.split(" ").toSeq
+	  
+	  val refs = adjacencyNode.attribute(REFS_ATTRIBUTE).map(_.toString) match {
+	    case Some(u: String) => u.split(" ").toList
 	    case None => Nil
 	  }
-	  optionTTrait.optionT[Seq].apply(refs.map(Some(_)))
+	  
+	  optionTTrait.optionT[Iterable].apply(refs.map(Some(_)))
 	}
 	
-	def getShortAndUniqueNames(provinceNode: scala.xml.Node): Iterable[String] = {
-	  val uniqueNameNodeSeq = provinceNode \\ UNIQUENAME_TAGNAME
-	  
-	  val shortNameOption = provinceNode.attribute(SHORTNAME_ATTRIBUTE).map(_.toString)
-	  
-	  val allNames = shortNameOption :: 
-		  (uniqueNameNodeSeq.map(_.attribute(NAME_ATTRIBUTE).map(_.toString)).toList)
-	  allNames.flatten
-	}
-	
-	def getShortNameToProvinceNameMap(provincesNodeSeq: NodeSeq, 
-	    provinces: Iterable[Location]): Map[String, String] = {
-	  
-	  val shortNameProvinceNameList = for (provinceNode <- provincesNodeSeq;
-	       shortName <- (provinceNode.attribute(SHORTNAME_ATTRIBUTE) :: Nil).flatten;
-		   provinceName <- getShortAndUniqueNames(provinceNode) if 
-		   						provinces.exists(_.id.equalsIgnoreCase(provinceName))
-	  ) yield {
-	    (shortName.toString, provinceName)
+	private def getNeighbourLocation(coastType: String,
+									neighbourName: String,
+									locations: Iterable[Location]): Option[Location] = {
+	  if (neighbourName.contains("-")) {
+	    val split = neighbourName.split("-")
+	    val provinceName = split(0)
+	    val coast = split(1)
+	    
+	    locations.find((loc: Location) => loc.province.equals(provinceName) && 
+	        							loc.coast.equals(coast))
+	  } else {
+	    locations.find((loc: Location) => loc.province.equals(neighbourName) && 
+	    								loc.coast.equals(coastType)
+	    )
 	  }
-	  
-	  Map(shortNameProvinceNameList: _*)
 	}
 	
-	def getNeighbourNameToProvinceNameMap(sNameToProvNameMap: Map[String, String],
-										 neighbourName: String): Option[String] = {
-		if (neighbourName.contains("-")) {
-	      val shortName = neighbourName.split("-")(0)
-	      val coast = neighbourName.split("-")(1)
-	      
-	      sNameToProvNameMap.get(shortName).map(String.format("%s-%s", _, coast))
-	    } else {
-	      sNameToProvNameMap.get(neighbourName)
-	    }  
-	  
-	}
+	implicit def toOptionTFromOption[Q](option: Option[Q]): OptionT[Iterable, Q] =
+	  new OptionTs {}.optionT[Iterable].apply(option :: Nil)
 	
-	
-	def getAdjacencies(adjacencyXML: Elem, provinces: Iterable[Location]): Iterable[Adjacency] = {
+	def getAdjacencies(adjacencyXML: Elem, locations: Iterable[Location]): Iterable[Adjacency] = {
 	  val provincesNodeSeq = adjacencyXML \\ PROVINCE_TAGNAME
 	  val optionTTrait = new OptionTs {}
-	  val provincesNodeSeqOptionT: OptionT[Seq, scala.xml.Node] = 
-	    optionTTrait.optionT[Seq].apply(provincesNodeSeq.map(Some(_)))
+	  val seqOptionT = optionTTrait.optionT[Seq]
+	  val provincesNodeSeqOptionT: OptionT[Iterable, scala.xml.Node] = 
+	    optionTTrait.optionT[Iterable].apply(provincesNodeSeq.map(Some(_)))
 	  
-	  val shortNameToProvinceNameMap = getShortNameToProvinceNameMap(provincesNodeSeq, provinces)
 	    
 	  (for (provinceNode <- provincesNodeSeqOptionT;
-		adjacencyNode <- getAdjacencyNodeSeqOptionT(provinceNode);
-		shortName <- optionTTrait.optionT[Seq].apply(provinceNode.attribute(SHORTNAME_ATTRIBUTE).map(_.toString) :: Nil);
-		provinceName <- optionTTrait.optionT[Seq].apply((shortNameToProvinceNameMap.get(shortName) :: Nil));
-		coastType <- optionTTrait.optionT[Seq].apply(adjacencyNode.attribute(TYPE_ATTRIBUTE) :: Nil);
+		adjacencyNode <- getAdjacencyNode(provinceNode);
 		neighbour <- getNeighbours(adjacencyNode);
-		neighbourProvince <- optionTTrait.optionT[Seq].apply(
-		    getNeighbourNameToProvinceNameMap(shortNameToProvinceNameMap, neighbour) :: Nil)
+		coastType <- adjacencyNode.attribute(TYPE_ATTRIBUTE).map(_.toString);
+		neighbourLocation <- getNeighbourLocation(coastType, neighbour, locations);
+		shortname <- provinceNode.attribute(SHORTNAME_ATTRIBUTE);
+		srcLocation <- locations.find((loc: Location) => loc.province.equals(shortname) && 
+	        		  											loc.coast.equals(coastType))
 	  ) yield (
-	    coastType.toString match {
-	      case LAND_TYPE => new Adjacency(provinceName, neighbourProvince, UnitType.ARMY)
-	      case ALL_COAST_TYPE => new Adjacency(provinceName, neighbourProvince, UnitType.FLEET)
-	      case _ => new Adjacency("%s-%s" format (provinceName, coastType.toString), 
-	          neighbourProvince, UnitType.FLEET)
-	    }
-	  )).flatten
+	    new Adjacency(srcLocation.id, neighbourLocation.id)
+	  )).value.flatten
 	}
 }

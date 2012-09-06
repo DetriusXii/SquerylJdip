@@ -4,29 +4,23 @@ import scala.xml._
 import com.squeryl.jdip.tables.Location
 
 object LocationCreator {
-	val PROVINCE_TAGNAME =  "PROVINCE"
-	val SUPPLY_CENTER_TAGNAME = "SUPPLY_CENTER"
-	val NAME_ATTRIBUTE = "name"
-	val BAD_XML_DATA_MESSAGE = "Province XML node data is not well formed"
-	  
-	def getLocationList(jdipMapSVG: Elem): Iterable[Location] = {
-	  (jdipMapSVG \\ PROVINCE_TAGNAME) map ((provinceNode: Node) => {
-	    val supplyCenterNodeExists = provinceNode.child.exists(_ match {
-	      case elem: Elem => elem.label.equals(SUPPLY_CENTER_TAGNAME)
-	      case _ => false
-	    })
-	    
-	    val provinceElem = provinceNode match {
-	      case elem: Elem => elem
-	      case _ => throw new Exception(BAD_XML_DATA_MESSAGE)
-	    }
-	    
-	    val provinceName = provinceElem.attribute(NAME_ATTRIBUTE) match {
-	      case Some(name: Seq[_]) => name.toString
-	      case None => throw new Exception(BAD_XML_DATA_MESSAGE)
-	    }
-	    
-	    new Location(provinceName, supplyCenterNodeExists)
-	  })
-	}
+  val PROVINCE_TAGNAME = "PROVINCE"
+  val ADJACENCY_TAGNAME = "ADJACENCY"
+  val SHORTNAME_ATTRIBUTE = "shortname"
+  val TYPE_ATTRIBUTE = "type"
+    
+  def getLocationList(stdAdjacency: scala.xml.Elem): Iterable[Location] = {
+    val provinceNodeSeq = stdAdjacency \\ PROVINCE_TAGNAME
+    
+    (for (provinceNode <- provinceNodeSeq;
+    	 adjacencyNode <- (provinceNode \\ ADJACENCY_TAGNAME)
+    ) yield {
+      for(shortname <- provinceNode.attribute(SHORTNAME_ATTRIBUTE).map(_.toString);
+    	  adjacencyType <- provinceNode.attribute(TYPE_ATTRIBUTE).map(_.toString)
+      ) yield {
+        new Location(shortname, adjacencyType)
+      }
+    }).flatten
+  }
+  
 }

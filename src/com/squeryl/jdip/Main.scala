@@ -26,10 +26,6 @@ object Main {
     transaction {
       EmpireCreator.empireList map (Jdip.empires.insert(_))
       PlayerCreator.playersList map (Jdip.players.insert(_))
-      ConfigXMLLoader.findFirstSVG(configFilepath) match {
-        case Some(u: scala.xml.Elem) => LocationCreator.getLocationList(u) map (Jdip.locations.insert(_))
-        case _ => throw new Exception("Did I crash here?")
-      }
       
       
       Jdip.players.insert(new Player("DetriusXii", password))
@@ -43,10 +39,15 @@ object Main {
       GameState.getGameStates map (Jdip.gameStates.insert(_))
     
       OrderTypeUnitType.getOrderTypeUnitTypes map (Jdip.orderTypeUnitTypes.insert(_))
+      Coast.getCoasts map (Jdip.coasts.insert(_))
       
       
       ConfigXMLLoader.findFirstAdjacency(configFilepath) match {
-        case Some(u: scala.xml.Elem) => AdjacencyCreator.getAdjacencies(u, Jdip.locations.toList) map (Jdip.adjacencies.insert(_))
+        case Some(u: scala.xml.Elem) => {
+          ProvinceCreator.getProvinces(u) map (Jdip.provinces.insert(_))
+          LocationCreator.getLocationList(u) map (Jdip.locations.insert(_))
+          AdjacencyCreator.getAdjacencies(u, Jdip.locations.toList) map (Jdip.adjacencies.insert(_))
+        }
         case _ => throw new Exception("Did I crash in the adjacencies?")
       }
       
