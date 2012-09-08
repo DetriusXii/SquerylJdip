@@ -23,7 +23,7 @@ object Jdip extends PostgreSchema("jdip") {
    val messages = table[Message]("messages", schemaName)
    val provinces = table[Province]("provinces", schemaName)
    val coasts = table[Coast]("coasts", schemaName)
-   val uniqueProvinceNames = table[UniqueProvinceName]("unique_province_name", schemaName)
+   val uniqueProvinceNames = table[UniqueProvinceName]("unique_province_names", schemaName)
    val diplomacyUnits = table[DiplomacyUnit]("diplomacy_units", schemaName)
    
   val gamePlayers = 

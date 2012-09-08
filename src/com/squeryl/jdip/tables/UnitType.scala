@@ -12,8 +12,8 @@ class UnitType(val id: String) extends KeyedEntity[String] {
 }
 
 object UnitType {
-  val ARMY = "Army"
-  val FLEET = "Fleet"
+  val ARMY = "army"
+  val FLEET = "fleet"
   
   def getUnitTypes = ARMY :: FLEET :: Nil map (new UnitType(_))
 }

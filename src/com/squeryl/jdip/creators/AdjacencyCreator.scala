@@ -6,7 +6,7 @@ import scala.xml._
 import scalaz._
 import com.squeryl.jdip.tables.UnitType
 
-object AdjacencyCreator {
+object AdjacencyCreator extends OptionTs {
 	val PROVINCE_TAGNAME = "PROVINCE"
 	val ADJACENCY_TAGNAME = "ADJACENCY"
 	val UNIQUENAME_TAGNAME = "UNIQUENAME"
@@ -18,22 +18,19 @@ object AdjacencyCreator {
 	val ALL_COAST_TYPE = "xc"
 	
 	private def getAdjacencyNode(provinceNode: scala.xml.Node): OptionT[Iterable, scala.xml.Node] = {
-	  val optionTTrait = new OptionTs {}
 	  val adjacencyNodeSeq: scala.xml.NodeSeq =
 	    provinceNode \\ ADJACENCY_TAGNAME
 	  
-	  optionTTrait.optionT[Iterable].apply(adjacencyNodeSeq.map(Some(_)).toList)
+	  optionT[Iterable].apply(adjacencyNodeSeq.map(Some(_)).toList)
 	}
 	
 	private def getNeighbours(adjacencyNode: scala.xml.Node): OptionT[Iterable, String] = {
-	  val optionTTrait = new OptionTs {}
-	  
 	  val refs = adjacencyNode.attribute(REFS_ATTRIBUTE).map(_.toString) match {
 	    case Some(u: String) => u.split(" ").toList
 	    case None => Nil
 	  }
 	  
-	  optionTTrait.optionT[Iterable].apply(refs.map(Some(_)))
+	  optionT[Iterable].apply(refs.map(Some(_)))
 	}
 	
 	private def getNeighbourLocation(coastType: String,
@@ -54,14 +51,13 @@ object AdjacencyCreator {
 	}
 	
 	implicit def toOptionTFromOption[Q](option: Option[Q]): OptionT[Iterable, Q] =
-	  new OptionTs {}.optionT[Iterable].apply(option :: Nil)
+	  optionT[Iterable].apply(option :: Nil)
 	
 	def getAdjacencies(adjacencyXML: Elem, locations: Iterable[Location]): Iterable[Adjacency] = {
 	  val provincesNodeSeq = adjacencyXML \\ PROVINCE_TAGNAME
-	  val optionTTrait = new OptionTs {}
-	  val seqOptionT = optionTTrait.optionT[Seq]
+	  val seqOptionT = optionT[Seq]
 	  val provincesNodeSeqOptionT: OptionT[Iterable, scala.xml.Node] = 
-	    optionTTrait.optionT[Iterable].apply(provincesNodeSeq.map(Some(_)))
+	    optionT[Iterable].apply(provincesNodeSeq.map(Some(_)))
 	  
 	    
 	  (for (provinceNode <- provincesNodeSeqOptionT;

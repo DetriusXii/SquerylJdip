@@ -16,7 +16,7 @@ object LocationCreator {
     	 adjacencyNode <- (provinceNode \\ ADJACENCY_TAGNAME)
     ) yield {
       for(shortname <- provinceNode.attribute(SHORTNAME_ATTRIBUTE).map(_.toString);
-    	  adjacencyType <- provinceNode.attribute(TYPE_ATTRIBUTE).map(_.toString)
+    	  adjacencyType <- adjacencyNode.attribute(TYPE_ATTRIBUTE).map(_.toString)
       ) yield {
         new Location(shortname, adjacencyType)
       }

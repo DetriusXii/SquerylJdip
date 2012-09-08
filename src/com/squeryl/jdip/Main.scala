@@ -45,6 +45,8 @@ object Main {
       ConfigXMLLoader.findFirstAdjacency(configFilepath) match {
         case Some(u: scala.xml.Elem) => {
           ProvinceCreator.getProvinces(u) map (Jdip.provinces.insert(_))
+          UniqueProvinceNameCreator.getUniqueProvinceNames(u) map (Jdip.uniqueProvinceNames.insert(_))
+          val locationList = LocationCreator.getLocationList(u)
           LocationCreator.getLocationList(u) map (Jdip.locations.insert(_))
           AdjacencyCreator.getAdjacencies(u, Jdip.locations.toList) map (Jdip.adjacencies.insert(_))
         }
@@ -88,6 +90,7 @@ object Main {
             
             val diplomacyUnits = DiplomacyUnitCreator.getDiplomacyUnits(gamePlayerEmpires,
                 UnitType.getUnitTypes,
+                Jdip.locations.toList,
             	gameTime, ConfigXMLLoader.findFirstVariant(configFilepath))
             diplomacyUnits map (u => Jdip.diplomacyUnits.insert(u))
             0

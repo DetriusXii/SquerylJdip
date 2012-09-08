@@ -18,6 +18,18 @@ object DiplomacyUnitCreator {
 	implicit def optionToOptionT[A](option: Option[A]) = 
 	  new OptionTs {}.optionT[Iterable].apply(option :: Nil)
 	  
+	  
+	def getLocationForCoastAndUnitType(unitType: String, 
+	    coastOption: Option[String], province: String, locations: Iterable[Location]): Option[Location] =
+	  (unitType, coastOption) match {
+	    case (_, Some(coast)) => locations.find((loc: Location) => 
+	      loc.province.equalsIgnoreCase(province) && loc.coast.equalsIgnoreCase(coast))
+	    case (UnitType.FLEET, _) => locations.find((loc: Location) =>
+	      loc.province.equalsIgnoreCase(province) && loc.coast.equalsIgnoreCase(Coast.ALL_COAST))
+	    case _ => locations.find((loc: Location) =>
+	      loc.province.equalsIgnoreCase(province) && loc.coast.equalsIgnoreCase(Coast.NO_COAST))
+	  }
+	  
 	def getDiplomacyUnits(gamePlayerEmpires: Iterable[GamePlayerEmpire],
 						  unitTypes: Iterable[UnitType],
 						  locations: Iterable[Location],
@@ -42,13 +54,12 @@ object DiplomacyUnitCreator {
 	        	power <- initialStateElem.attribute(POWER_ATTRIBUTE);
 	        	unitType <- initialStateElem.attribute(UNIT_ATTRIBUTE);
 	        	owner <- gamePlayerEmpires.find(gpe => gpe.empireName.equalsIgnoreCase(power.toString));
-	        	correctedUnitType <- unitTypes.find(ut => ut.id.equalsIgnoreCase(unitType.toString))
+	        	correctedUnitType <- unitTypes.find(ut => ut.id.equalsIgnoreCase(unitType.toString));
+	        	location <- getLocationForCoastAndUnitType(unitType.toString, 
+	        	    initialStateElem.attribute(UNITCOAST_ATTRIBUTE).map(_.toString),
+	        	    province.toString, locations)
 	        ) yield {
-	          val location = initialStateElem.attribute(UNITCOAST_ATTRIBUTE) match {
-	            case Some(coast) => "%s-%s" format (province.toString, coast.toString)
-	            case None => province.toString
-	          }
-	          new DiplomacyUnit(correctedUnitType.id, owner.id, location, unitNumber, gameTime.id)
+	          new DiplomacyUnit(correctedUnitType.id, owner.id, location.id, unitNumber, gameTime.id)
 	        }
 	    })
 	  }) match {
