@@ -46,7 +46,6 @@ object Main {
         case Some(u: scala.xml.Elem) => {
           ProvinceCreator.getProvinces(u) map (Jdip.provinces.insert(_))
           UniqueProvinceNameCreator.getUniqueProvinceNames(u) map (Jdip.uniqueProvinceNames.insert(_))
-          val locationList = LocationCreator.getLocationList(u)
           LocationCreator.getLocationList(u) map (Jdip.locations.insert(_))
           AdjacencyCreator.getAdjacencies(u, Jdip.locations.toList) map (Jdip.adjacencies.insert(_))
         }
