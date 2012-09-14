@@ -7,8 +7,8 @@ package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
 
-class GamePlayer(val gameName: String, 
-                 val playerName: String) extends KeyedEntity[Int] {
+case class GamePlayer(gameName: String, 
+                 playerName: String) extends KeyedEntity[Int] {
   def this() = this("", "")  
   
   val id = 0

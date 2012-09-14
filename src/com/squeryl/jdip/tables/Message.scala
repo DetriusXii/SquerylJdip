@@ -12,10 +12,10 @@ import org.squeryl.PrimitiveTypeMode._
 
 
 
-class Message(val senderId: Int, 
-               val receiverId: Int, 
-               val timestamp: Timestamp,
-               val message: String) extends KeyedEntity[CompositeKey3[Int, Int, java.sql.Timestamp]] {
+case class Message(senderId: Int, 
+               receiverId: Int, 
+               timestamp: Timestamp,
+               message: String) extends KeyedEntity[CompositeKey3[Int, Int, java.sql.Timestamp]] {
   def this() = this(0, 0, new Timestamp(0L), "")
   
   def id = compositeKey(senderId, receiverId, timestamp)

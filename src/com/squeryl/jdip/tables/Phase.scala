@@ -7,7 +7,7 @@ package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
 
-class Phase(val id: String) extends KeyedEntity[String] {
+case class Phase(id: String) extends KeyedEntity[String] {
   def this() = this("")
 }
 

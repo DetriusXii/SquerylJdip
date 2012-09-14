@@ -2,7 +2,9 @@ package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
 
-class GameTime(val gameYear: Int, val gameSeason: String, val gamePhase: String) extends KeyedEntity[Int] {
+case class GameTime(gameYear: Int, 
+    gameSeason: String, 
+    gamePhase: String) extends KeyedEntity[Int] {
 	val id = 0
 	def this() = this(0, "", "")
 }

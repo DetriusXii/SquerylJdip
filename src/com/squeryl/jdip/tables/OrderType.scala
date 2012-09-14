@@ -7,7 +7,7 @@ package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
 
-class OrderType(val id: String, val phase: String) extends KeyedEntity[String] {
+case class OrderType(id: String, phase: String) extends KeyedEntity[String] {
   def this() = this("", "")
 }
 

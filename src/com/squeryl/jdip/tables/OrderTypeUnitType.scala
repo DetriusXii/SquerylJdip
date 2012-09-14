@@ -3,8 +3,8 @@ import org.squeryl.KeyedEntity
 import org.squeryl.dsl._
 import org.squeryl.PrimitiveTypeMode._
 
-class OrderTypeUnitType(val orderType: String, 
-    val unitType: String) extends KeyedEntity[CompositeKey2[String, String]] {
+case class OrderTypeUnitType(orderType: String, 
+    unitType: String) extends KeyedEntity[CompositeKey2[String, String]] {
 	
   def this() = this("", "")
 

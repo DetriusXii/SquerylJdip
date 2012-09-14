@@ -7,6 +7,6 @@ package com.squeryl.jdip.tables
 
 import org.squeryl.PrimitiveTypeMode._
 
-class Schemata(val schema_name: String) {
+case class Schemata(schema_name: String) {
   def this() = this("")
 } 

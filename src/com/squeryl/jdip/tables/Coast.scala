@@ -2,7 +2,7 @@ package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
 
-class Coast(val id: String) extends KeyedEntity[String] {
+case class Coast(id: String) extends KeyedEntity[String] {
   def this() = this("")
 }
 

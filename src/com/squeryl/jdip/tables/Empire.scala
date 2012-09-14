@@ -9,13 +9,13 @@ import org.squeryl.KeyedEntity
 import org.squeryl.PrimitiveTypeMode._
 import scala.xml._
 
-class Empire(
-  val id: String,
-  val startingArmyUnits: Int,
-  val startingFleetUnits: Int,
-  val colour: String,
-  val armySVGElement: BinaryType,
-  val fleetSVGElement: BinaryType) extends KeyedEntity[String] {
+case class Empire(
+  id: String,
+  startingArmyUnits: Int,
+  startingFleetUnits: Int,
+  colour: String,
+  armySVGElement: BinaryType,
+  fleetSVGElement: BinaryType) extends KeyedEntity[String] {
   
   def this() = this("", 0, 0, "", new BinaryType(0), new BinaryType(0))
   def this(id: String) = this(id, 0, 0, "", new BinaryType(0), new BinaryType(0))

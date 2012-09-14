@@ -7,7 +7,7 @@ package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
 
-class Season(val id: String) extends KeyedEntity[String] {
+case class Season(id: String) extends KeyedEntity[String] {
   def this() = this("")
 }
 

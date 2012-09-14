@@ -7,11 +7,11 @@ package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
 
-class Player(val id: String, 
-             val password: String, 
-             val email: Option[String],
-             val wins: Int,
-             val losses: Int) extends KeyedEntity[String] {
+case class Player(id: String, 
+             password: String, 
+             email: Option[String],
+             wins: Int,
+             losses: Int) extends KeyedEntity[String] {
   def this() = this("", "", Some(""), 0, 0)
   def this(id: String, password: String) = this(id, password, Some(""), 0, 0)
 }
