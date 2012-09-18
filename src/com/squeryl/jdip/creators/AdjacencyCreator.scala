@@ -65,11 +65,15 @@ object AdjacencyCreator extends OptionTs {
 		neighbour <- getNeighbours(adjacencyNode);
 		coastType <- adjacencyNode.attribute(TYPE_ATTRIBUTE).map(_.toString);
 		neighbourLocation <- getNeighbourLocation(coastType, neighbour, locations);
-		shortname <- provinceNode.attribute(SHORTNAME_ATTRIBUTE);
-		srcLocation <- locations.find((loc: Location) => loc.province.equals(shortname) && 
-	        		  											loc.coast.equals(coastType))
+		shortname <- provinceNode.attribute(SHORTNAME_ATTRIBUTE).map(_.toString);
+		srcLocation <- locations.find(_ match {
+		  case Location(shortname, coastType) => true
+		  case _ => false
+		})
 	  ) yield (
 	    new Adjacency(srcLocation.id, neighbourLocation.id)
-	  )).value.flatten
+	  )).
+	  value.
+	  flatten
 	}
 }
