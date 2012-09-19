@@ -21,7 +21,7 @@ object AdjacencyCreator extends OptionTs {
 	  val adjacencyNodeSeq: scala.xml.NodeSeq =
 	    provinceNode \\ ADJACENCY_TAGNAME
 	  
-	  optionT[Iterable].apply(adjacencyNodeSeq.map(Some(_)).toList)
+	  optionT[Iterable](adjacencyNodeSeq.map(Some(_)).toList)
 	}
 	
 	private def getNeighbours(adjacencyNode: scala.xml.Node): OptionT[Iterable, String] = {
@@ -30,7 +30,7 @@ object AdjacencyCreator extends OptionTs {
 	    case None => Nil
 	  }
 	  
-	  optionT[Iterable].apply(refs.map(Some(_)))
+	  optionT[Iterable](refs.map(Some(_)))
 	}
 	
 	private def getNeighbourLocation(coastType: String,
@@ -54,21 +54,21 @@ object AdjacencyCreator extends OptionTs {
 	}
 	
 	implicit def toOptionTFromOption[Q](option: Option[Q]): OptionT[Iterable, Q] =
-	  optionT[Iterable].apply(option :: Nil)
+	  optionT[Iterable](option :: Nil)
 	
 	def getAdjacencies(adjacencyXML: Elem, locations: Iterable[Location]): Iterable[Adjacency] = {
 	  val provincesNodeSeq = adjacencyXML \\ PROVINCE_TAGNAME
 	  val seqOptionT = optionT[Seq]
 	  val provincesNodeSeqOptionT: OptionT[Iterable, scala.xml.Node] = 
-	    optionT[Iterable].apply(provincesNodeSeq.map(Some(_)))
+	    optionT[Iterable](provincesNodeSeq.map(Some(_)))
 	  
 	    
 	  (for (provinceNode <- provincesNodeSeqOptionT;
+		shortname <- provinceNode.attribute(SHORTNAME_ATTRIBUTE).map(_.toString);
 		adjacencyNode <- getAdjacencyNode(provinceNode);
 		neighbour <- getNeighbours(adjacencyNode);
 		coastType <- adjacencyNode.attribute(TYPE_ATTRIBUTE).map(_.toString);
-		neighbourLocation <- getNeighbourLocation(coastType, neighbour, locations);
-		shortname <- provinceNode.attribute(SHORTNAME_ATTRIBUTE).map(_.toString);
+		neighbourLocation <- getNeighbourLocation(coastType, neighbour, locations)
 		srcLocation <- locations.find(_ match {
 		  case Location(shortname, coastType) => true
 		  case _ => false
