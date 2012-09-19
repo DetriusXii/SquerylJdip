@@ -41,12 +41,15 @@ object AdjacencyCreator extends OptionTs {
 	    val provinceName = split(0)
 	    val coast = split(1)
 	    
-	    locations.find((loc: Location) => loc.province.equals(provinceName) && 
-	        							loc.coast.equals(coast))
+	    locations.find(_ match {
+	      case Location(provinceName, coast) => true
+	      case _ => false
+	    })
 	  } else {
-	    locations.find((loc: Location) => loc.province.equals(neighbourName) && 
-	    								loc.coast.equals(coastType)
-	    )
+	    locations.find(_ match {
+	      case Location(neighbourName, coastType) => true
+	      case _ => false
+	    })
 	  }
 	}
 	
@@ -72,8 +75,6 @@ object AdjacencyCreator extends OptionTs {
 		})
 	  ) yield (
 	    new Adjacency(srcLocation.id, neighbourLocation.id)
-	  )).
-	  value.
-	  flatten
+	  )).value.flatten
 	}
 }

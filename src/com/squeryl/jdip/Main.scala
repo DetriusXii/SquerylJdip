@@ -47,6 +47,7 @@ object Main {
           ProvinceCreator.getProvinces(u) map (Jdip.provinces.insert(_))
           UniqueProvinceNameCreator.getUniqueProvinceNames(u) map (Jdip.uniqueProvinceNames.insert(_))
           LocationCreator.getLocationList(u) map (Jdip.locations.insert(_))
+          val adjacencies = AdjacencyCreator.getAdjacencies(u, Jdip.locations.toList)
           AdjacencyCreator.getAdjacencies(u, Jdip.locations.toList) map (Jdip.adjacencies.insert(_))
         }
         case _ => throw new Exception("Did I crash in the adjacencies?")
