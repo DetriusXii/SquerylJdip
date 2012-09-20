@@ -42,12 +42,12 @@ object AdjacencyCreator extends OptionTs {
 	    val coast = split(1)
 	    
 	    locations.find(_ match {
-	      case Location(provinceName, coast) => true
+	      case Location(`provinceName`, `coast`) => true
 	      case _ => false
 	    })
 	  } else {
 	    locations.find(_ match {
-	      case Location(neighbourName, coastType) => true
+	      case Location(`neighbourName`, `coastType`) => true
 	      case _ => false
 	    })
 	  }
@@ -70,7 +70,7 @@ object AdjacencyCreator extends OptionTs {
 		coastType <- adjacencyNode.attribute(TYPE_ATTRIBUTE).map(_.toString);
 		neighbourLocation <- getNeighbourLocation(coastType, neighbour, locations);
 		srcLocation <- locations.find(_ match {
-		  case Location(shortname, coastType) => true
+		  case Location(`shortname`, `coastType`) => true
 		  case _ => false
 		})
 	  ) yield (
