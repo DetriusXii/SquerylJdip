@@ -25,6 +25,7 @@ object Jdip extends PostgreSchema("jdip") {
    val coasts = table[Coast]("coasts", schemaName)
    val uniqueProvinceNames = table[UniqueProvinceName]("unique_province_names", schemaName)
    val diplomacyUnits = table[DiplomacyUnit]("diplomacy_units", schemaName)
+   val ownedProvinces = table[OwnedProvince]("owned_provinces", schemaName)
    
   val gamePlayers = 
      manyToManyRelation(games, players, "game_players", schemaName).
