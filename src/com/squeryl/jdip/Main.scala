@@ -92,10 +92,13 @@ object Main {
                 Jdip.locations.toList,
             	gameTime, ConfigXMLLoader.findFirstVariant(configFilepath))
             diplomacyUnits map (u => Jdip.diplomacyUnits.insert(u))
-            0
+            ()
           }  
         }
       
+      val ownedProvinces = OwnedProvince.getOwnedProvinces(
+          Jdip.diplomacyUnits.toList, 
+          Jdip.locations.toList).map(Jdip.ownedProvinces.insert(_))
     }
   }
   
