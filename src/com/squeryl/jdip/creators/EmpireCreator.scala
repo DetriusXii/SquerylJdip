@@ -17,9 +17,12 @@ object EmpireCreator {
 	private val RUSSIA_EMPIRE_NAME: String = "Russia"
 	private val ids: List[String] = "Austria" :: "England" :: "France" :: "Germany" :: "Italy" :: 
           "Russia" :: "Turkey" :: Nil
-	private val cssColours: List[String] = "austriaUnitRed" :: "englandUnitPurple" :: "franceUnitBlue" :: 
-		"germanyUnitBlack" :: "italyUnitGreen" :: "russiaUnitWhite" :: "turkeyUnitYellow" :: Nil
-	
+	private val unitColourClasses: List[String] = 
+	  	"unitaustria" :: "unitengland" :: "unitfrance" :: 
+		"unitgermany" :: "unititaly" :: "unitrussia" :: "unitturkey" :: Nil
+	private val provinceColourClasses: List[String] = 
+	  "austria" :: "england" :: "france" :: "germany" :: "italy" :: 
+	  "russia" :: "turkey" :: Nil 
 	
 	private val armySymbol: Elem = <symbol id="Army" viewBox="0 0 23 15" overflow="visible">
             <g>
@@ -80,14 +83,21 @@ object EmpireCreator {
             val getEmpireArmyElement: String => Elem = getSVGTemplate(armySymbol)
             val getEmpireFleetElement: String => Elem = getSVGTemplate(fleetSymbol)
 
-            empireList = (ids zip cssColours) map ((u: Tuple2[String, String]) => {
-              val armyElement = getEmpireArmyElement(u._2).toString.getBytes
-              val fleetElement = getEmpireFleetElement(u._2).toString.getBytes
+            val cssClasses = unitColourClasses zip provinceColourClasses
+            empireList = (ids zip cssClasses) map ((u: Tuple2[String, Tuple2[String, String]]) => {
+              val id = u._1
+              val unitColour = u._2._1
+              val provinceColour = u._2._2
+              
+              val armyElement = getEmpireArmyElement(unitColour).toString.getBytes
+              val fleetElement = getEmpireFleetElement(unitColour).toString.getBytes
 
-              u._1 match {
-                case ENGLAND_EMPIRE_NAME => new Empire(u._1, 1, 2, u._2, armyElement, fleetElement) 
-                case RUSSIA_EMPIRE_NAME => new Empire(u._1, 2, 2, u._2, armyElement, fleetElement)
-                case _ => new Empire(u._1, 1, 2, u._2, armyElement, fleetElement)
+              id match {
+                case ENGLAND_EMPIRE_NAME => Empire(id, 1, 2, unitColour, provinceColour, 
+                    armyElement, fleetElement) 
+                case RUSSIA_EMPIRE_NAME => Empire(id, 2, 2, unitColour, provinceColour, 
+                    armyElement, fleetElement)
+                case _ => Empire(u._1, 1, 2, unitColour, provinceColour, armyElement, fleetElement)
               }
             })
           } catch {
