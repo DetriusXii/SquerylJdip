@@ -99,6 +99,15 @@ object Jdip extends PostgreSchema("jdip") {
     ut.id === dpu.unitType
   )
 
+  val owpProvinceForeignKey = oneToManyRelation(provinces, ownedProvinces).via((pr, owp) =>
+  	pr.id === owp.province
+  )
+  val owpGamePlayerEmpireForeignKey = oneToManyRelation(gamePlayerEmpires, ownedProvinces).via((gpe, owp) =>
+  	gpe.id === owp.gamePlayerEmpireID
+  )
+  val owpGameTimeForeignKey = oneToManyRelation(gameTimes, ownedProvinces).via((gt, owp) => 
+    gt.id === owp.gameTimeID
+  )
   
   on(diplomacyUnits)(dpu => declare(
 		  columns(dpu.owner, dpu.unitNumber, dpu.gameTime) are(unique)
