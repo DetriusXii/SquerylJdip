@@ -92,9 +92,10 @@ object Main {
                 Jdip.locations.toList,
             	gameTime, ConfigXMLLoader.findFirstVariant(configFilepath))
             diplomacyUnits map (u => Jdip.diplomacyUnits.insert(u))
-            0
+            ()
           }  
         }
+      
       
     }
   }
