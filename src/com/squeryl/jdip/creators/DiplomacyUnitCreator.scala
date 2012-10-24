@@ -31,6 +31,7 @@ object DiplomacyUnitCreator {
 	  }
 	  
 	def getDiplomacyUnits(gamePlayerEmpires: Iterable[GamePlayerEmpire],
+						  empires: Iterable[Empire],
 						  unitTypes: Iterable[UnitType],
 						  locations: Iterable[Location],
 						  gameTime: GameTime,
@@ -53,7 +54,8 @@ object DiplomacyUnitCreator {
 	        for (province <- initialStateElem.attribute(PROVINCE_ATTRIBUTE);
 	        	power <- initialStateElem.attribute(POWER_ATTRIBUTE);
 	        	unitType <- initialStateElem.attribute(UNIT_ATTRIBUTE);
-	        	owner <- gamePlayerEmpires.find(gpe => gpe.empireName.equalsIgnoreCase(power.toString));
+	        	empire <- empires.find(_.alternateName.equalsIgnoreCase(power.toString));
+	        	owner <- gamePlayerEmpires.find(gpe => gpe.empireName.equalsIgnoreCase(empire.id));
 	        	correctedUnitType <- unitTypes.find(ut => ut.id.equalsIgnoreCase(unitType.toString));
 	        	location <- getLocationForCoastAndUnitType(unitType.toString, 
 	        	    initialStateElem.attribute(UNITCOAST_ATTRIBUTE).map(_.toString),

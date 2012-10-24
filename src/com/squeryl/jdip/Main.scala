@@ -88,6 +88,7 @@ object Main {
                 set(g.gameState := GameState.ACTIVE))
             
             val diplomacyUnits = DiplomacyUnitCreator.getDiplomacyUnits(gamePlayerEmpires,
+                Jdip.empires,
                 UnitType.getUnitTypes,
                 Jdip.locations.toList,
             	gameTime, ConfigXMLLoader.findFirstVariant(configFilepath))
@@ -99,6 +100,9 @@ object Main {
       val ownedProvinces = OwnedProvince.getOwnedProvinces(
           Jdip.diplomacyUnits.toList, 
           Jdip.locations.toList).map(Jdip.ownedProvinces.insert(_))
+          
+      Jdip.diplomacyUnits.insert(DiplomacyUnit(UnitType.ARMY, 6, 74, 24, 1))
+      Jdip.diplomacyUnits.insert(DiplomacyUnit(UnitType.FLEET, 6, 36, 25, 1))
     }
   }
   

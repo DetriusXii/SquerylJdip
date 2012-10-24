@@ -17,6 +17,7 @@ object EmpireCreator {
 	private val RUSSIA_EMPIRE_NAME: String = "Russia"
 	private val ids: List[String] = "Austria" :: "England" :: "France" :: "Germany" :: "Italy" :: 
           "Russia" :: "Turkey" :: Nil
+    private val ENGLAND_ALTERNATE_NAME = "Britain"
 	private val unitColourClasses: List[String] = 
 	  	"unitaustria" :: "unitengland" :: "unitfrance" :: 
 		"unitgermany" :: "unititaly" :: "unitrussia" :: "unitturkey" :: Nil
@@ -94,10 +95,11 @@ object EmpireCreator {
 
               id match {
                 case ENGLAND_EMPIRE_NAME => Empire(id, 1, 2, unitColour, provinceColour, 
-                    armyElement, fleetElement) 
+                    armyElement, fleetElement, ENGLAND_ALTERNATE_NAME) 
                 case RUSSIA_EMPIRE_NAME => Empire(id, 2, 2, unitColour, provinceColour, 
-                    armyElement, fleetElement)
-                case _ => Empire(u._1, 1, 2, unitColour, provinceColour, armyElement, fleetElement)
+                    armyElement, fleetElement, id)
+                case _ => Empire(id, 
+                    1, 2, unitColour, provinceColour, armyElement, fleetElement, id)
               }
             })
           } catch {
