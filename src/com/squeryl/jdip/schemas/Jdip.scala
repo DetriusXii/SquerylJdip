@@ -76,7 +76,7 @@ object Jdip extends PostgreSchema("jdip") {
     
   val gamePlayerEmpiresOrdersForeignKey = 
     oneToManyRelation(gamePlayerEmpires, orders).via((gpr, o) => {
-        gpr.id === o.gamePlayerEmpire
+        gpr.id === o.gamePlayerEmpireID
     })
   val orderTypeOrdersForeignKey = oneToManyRelation(orderTypes, orders).via((ot, o) => 
         ot.id === o.orderType
@@ -85,13 +85,13 @@ object Jdip extends PostgreSchema("jdip") {
         ut.id === o.unitType
     )
   val srcLocationOrdersForeignKey = oneToManyRelation(locations, orders).via((loc, o) => 
-    loc.id === o.srcLocation
+    loc.id === o.srcLocationID
   )
   val dstLocationOrdersForeignKey = oneToManyRelation(locations, orders).via((loc, o) =>
-  	loc.id === o.dstLocation
+  	loc.id === o.dstLocationIDOption
   )
   val unitLocationOrdersForeignKey = oneToManyRelation(locations, orders).via((loc, o) => 
-  	loc.id === o.unitLocation
+  	loc.id === o.unitLocationID
   )
    
   val uniProvinceForeignKey = oneToManyRelation(provinces, uniqueProvinceNames).via((pr, upn) =>
