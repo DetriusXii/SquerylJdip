@@ -18,9 +18,10 @@ object OwnedProvince {
       locations: Iterable[Location]): Iterable[OwnedProvince] = 
         diplomacyUnits.map(dpu => {
           val unitLocation: Option[Location] = 
-            locations.find(loc => loc.id == dpu.unitLocation)
+            locations.find(loc => loc.id == dpu.unitLocationID)
           unitLocation.map(_ match {
-            case Location(province, _) => OwnedProvince(province, dpu.owner, dpu.gameTime)
+            case Location(province, _) => 
+              OwnedProvince(province, dpu.gamePlayerEmpireID, dpu.gameTimeID)
           })
         }).flatten
 }

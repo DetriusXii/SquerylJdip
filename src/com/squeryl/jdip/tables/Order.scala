@@ -7,13 +7,13 @@ package com.squeryl.jdip.tables
 
 import java.sql.Timestamp
 
-case class Order(gameState: String, 
-            gamePlayer: Int, 
+case class Order(
+            gamePlayerEmpire: Int, 
             orderType: String,
             unitType: String,
             timestamp: Timestamp,
-            srcLocation: String,
-            dstLocation: Option[String],
-            unitLocation: String) {
-  def this() = this("", 0, "", "", new Timestamp(0L), "", Some(""), "")
+            srcLocation: Int,
+            dstLocation: Option[Int],
+            unitLocation: Int) {
+  def this() = this(0, "", "", new Timestamp(0L), 0, Some(0), 0)
 } 

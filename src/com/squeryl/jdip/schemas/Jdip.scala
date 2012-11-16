@@ -76,27 +76,39 @@ object Jdip extends PostgreSchema("jdip") {
     
   val gamePlayerEmpiresOrdersForeignKey = 
     oneToManyRelation(gamePlayerEmpires, orders).via((gpr, o) => {
-        gpr.id === o.gamePlayer
+        gpr.id === o.gamePlayerEmpire
     })
-  val orderTypeOrdersForeignKey = oneToManyRelation(orderTypes, orders).via((ot, o) => {
+  val orderTypeOrdersForeignKey = oneToManyRelation(orderTypes, orders).via((ot, o) => 
         ot.id === o.orderType
-    })
-  val unitTypesOrdersForeignKey = oneToManyRelation(unitTypes, orders).via((ut, o) => {
+    )
+  val unitTypesOrdersForeignKey = oneToManyRelation(unitTypes, orders).via((ut, o) => 
         ut.id === o.unitType
-    })
+    )
+  val srcLocationOrdersForeignKey = oneToManyRelation(locations, orders).via((loc, o) => 
+    loc.id === o.srcLocation
+  )
+  val dstLocationOrdersForeignKey = oneToManyRelation(locations, orders).via((loc, o) =>
+  	loc.id === o.dstLocation
+  )
+  val unitLocationOrdersForeignKey = oneToManyRelation(locations, orders).via((loc, o) => 
+  	loc.id === o.unitLocation
+  )
    
   val uniProvinceForeignKey = oneToManyRelation(provinces, uniqueProvinceNames).via((pr, upn) =>
   	pr.id === upn.provinceName
   )  
     
   val dpuOwnerForeignKey = oneToManyRelation(gamePlayerEmpires, diplomacyUnits).via((gpe, dpu) => 
-    gpe.id === dpu.owner
+    gpe.id === dpu.gamePlayerEmpireID
   )
-  val dpuProvinceForeignKey = oneToManyRelation(locations, diplomacyUnits).via((loc, dpu) => 
-    loc.id === dpu.unitLocation
+  val dpuLocationForeignKey = oneToManyRelation(locations, diplomacyUnits).via((loc, dpu) => 
+    loc.id === dpu.unitLocationID
   )
   val dpuUnitTypeForeignKey = oneToManyRelation(unitTypes, diplomacyUnits).via((ut, dpu) => 
     ut.id === dpu.unitType
+  )
+  val dpuGameTimeForeignKey = oneToManyRelation(gameTimes, diplomacyUnits).via((gt, dpu) =>
+  	gt.id === dpu.gameTimeID
   )
 
   val owpProvinceForeignKey = oneToManyRelation(provinces, ownedProvinces).via((pr, owp) =>
@@ -110,7 +122,7 @@ object Jdip extends PostgreSchema("jdip") {
   )
   
   on(diplomacyUnits)(dpu => declare(
-		  columns(dpu.owner, dpu.unitNumber, dpu.gameTime) are(unique)
+		  columns(dpu.gamePlayerEmpireID, dpu.unitNumber, dpu.gameTimeID) are(unique)
   ))
   
   on(locations)((loc: Location) => declare(

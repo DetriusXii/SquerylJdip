@@ -1,6 +1,7 @@
 package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
+import com.squeryl.jdip.schemas.Jdip
 
 case class Location(province: String, coast: String) extends KeyedEntity[Int] {
 	val id = 0
@@ -10,4 +11,7 @@ case class Location(province: String, coast: String) extends KeyedEntity[Int] {
 	}
 	
 	def this() = this("", "")
+	
+	lazy val sourceLocations = Jdip.adjacencies.right(this)
+	lazy val destinationAdjacencies = Jdip.adjacencies.left(this)
 }

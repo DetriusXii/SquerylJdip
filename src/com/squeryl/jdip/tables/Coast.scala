@@ -1,9 +1,12 @@
 package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
+import com.squeryl.jdip.schemas.Jdip
 
 case class Coast(id: String) extends KeyedEntity[String] {
   def this() = this("")
+  
+  lazy val provinces = Jdip.locations.right(this)
 }
 
 object Coast {
@@ -16,4 +19,5 @@ object Coast {
     
   def getCoasts: List[Coast] = 
     ALL_COAST :: NORTH_COAST :: EAST_COAST :: SOUTH_COAST :: WEST_COAST :: NO_COAST :: Nil map (new Coast(_))
+  
 }
