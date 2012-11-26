@@ -246,4 +246,14 @@ class DBQueries(conn: java.sql.Connection) {
        diplomacyUnit.unitLocation.single
      }
    }
+   
+   def getAllActiveGames(): List[Game] = {
+     val dbSession = Session.create(conn, new RevisedPostgreSqlAdapter)
+     using(dbSession) {
+       from(Jdip.games) { (g: Game) =>
+         where(g.gameState === GameState.ACTIVE)
+         select(g)
+       }.toList
+     }
+   }
 }

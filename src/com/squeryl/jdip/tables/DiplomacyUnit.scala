@@ -16,4 +16,9 @@ case class DiplomacyUnit(unitType: String,
   lazy val gamePlayerEmpire: ManyToOne[GamePlayerEmpire] = Jdip.dpuOwnerForeignKey.right(this)
   lazy val unitLocation: ManyToOne[Location] = Jdip.dpuLocationForeignKey.right(this)
   lazy val gameTime: ManyToOne[GameTime] = Jdip.dpuGameTimeForeignKey.right(this)
+  
+  lazy val potentialMoveLocations = Jdip.potentialMoveOrders.left(this)
+  lazy val potentialSupportHoldLocations = Jdip.potentialSupportHoldOrders.left(this)
+  lazy val potentialSupportMoveOrders = Jdip.psmoDiplomacyUnitForeignKey.left(this)
+  lazy val potentialConvoyOrders = Jdip.pcoDiplomacyUnitForeignKey.left(this)
 }

@@ -14,6 +14,9 @@ import com.squeryl.jdip.tables._
 import com.squeryl.jdip.creators._
 import com.squeryl.jdip.schemas.Jdip
 import com.squeryl.jdip.creators._
+import scalaz.ReaderT
+import scalaz.Identity
+import com.squeryl.jdip.queries.DBQueries
 
 object Main {
 	
@@ -22,7 +25,8 @@ object Main {
    */
   
   private def insertIntoTables(username: String, 
-      password: String, configFilepath: String): Unit = {
+      password: String, configFilepath: String, 
+      conn: java.sql.Connection): Unit = {
     transaction {
       EmpireCreator.empireList map (Jdip.empires.insert(_))
       PlayerCreator.playersList map (Jdip.players.insert(_))
@@ -101,48 +105,57 @@ object Main {
           Jdip.diplomacyUnits.toList, 
           Jdip.locations.toList).map(Jdip.ownedProvinces.insert(_))
           
-      Jdip.diplomacyUnits.insert(DiplomacyUnit(UnitType.ARMY, 6, 74, 24, 1))
-      Jdip.diplomacyUnits.insert(DiplomacyUnit(UnitType.FLEET, 6, 36, 25, 1))
+      val dbQueries = new DBQueries(conn)
+      val activeGames: List[Game] = dbQueries.getAllActiveGames()
+      
+      activeGames.foreach((g: Game) => {
+        val pmoc = new PotentialMoveOrderCreator(g, dbQueries)
+        val pshoc = new PotentialSupportHoldOrderCreator(g, dbQueries)
+        val psmoc = new PotentialSupportMoveOrderCreator(g, dbQueries)
+        val pcoc = new PotentialConvoyOrderCreator(g, dbQueries)
+        
+        Jdip.potentialMoveOrders.insert(pmoc.createPotentialMoveOrders)
+        Jdip.potentialSupportHoldOrders.
+          insert(pshoc.createPotentialSupportHoldOrders)
+        Jdip.potentialSupportMoveOrders.
+          insert(psmoc.createPotentialSupportMoveOrders)
+        Jdip.potentialConvoyOrders.
+          insert(pcoc.createPotentialConvoyOrders)
+      })
     }
   }
   
+  private def insertIntoTablesReader: ReaderT[Identity, Configuration, Unit] =
+    ReaderT((c: Configuration) => 
+      Identity(
+        insertIntoTables(c.username, c.password, c.configFile, c.connection)))
  
   
   def main(args: Array[String]): Unit = {
+    val fullDriverClassName = "org.postgresql.Driver"
+    val jdbcURL = "jdbc:postgresql:postgres"
     
-    Class.forName("org.postgresql.Driver")
+    Class.forName(fullDriverClassName)
     
-    SessionFactory.concreteFactory = Some(() => {
-        Session.create(java.sql.DriverManager.getConnection(
-            "jdbc:postgresql:postgres", 
-            args(0), 
-            args(1)), new RevisedPostgreSqlAdapter)
-      })
-    
-    var usernameOption: Option[String] = None
-    var passwordOption: Option[String] = None
-    var databaseOption: Option[String] = None
-    var configFileOption: Option[String] = None
     var dropOnlyFlag: Option[String] = args.find(_.equals("-dropOnly"))
     
-    for ( usernameFlag <- args.find(_.equals("-u"));
+    val configurationOption: Option[Configuration] =
+      for ( usernameFlag <- args.find(_.equals("-u"));
           passwordFlag <- args.find(_.equals("-p"));
           configFileFlag <- args.find(_.equals("-c"))
     ) yield {
-      usernameOption = Some(args.apply(args.indexOf(usernameFlag) + 1))
-      passwordOption = Some(args.apply(args.indexOf(passwordFlag) + 1))
-      configFileOption = Some(args.apply(args.indexOf(configFileFlag) + 1))
-      Unit
+      val username = args(args.indexOf(usernameFlag) + 1)
+      val password = args(args.indexOf(passwordFlag) + 1)
+      val configFile = args(args.indexOf(configFileFlag) + 1)
+      val connection = 
+        java.sql.DriverManager.getConnection(jdbcURL, username, password)
+      Configuration(username, password, configFile, jdbcURL, connection)
     }
     
-    SessionFactory.concreteFactory = for ( 
-      username <- usernameOption;
-	  password <- passwordOption;
-	  configFile <- configFileOption
-    ) yield (() => Session.create(
-    		java.sql.DriverManager.getConnection("jdbc:postgresql:postgres",
-    		  username,
-    		  password),
+    
+    SessionFactory.concreteFactory = for (
+        configuration <- configurationOption
+    ) yield (() => Session.create(configuration.connection,
     		  new RevisedPostgreSqlAdapter
 		  )
 	)
@@ -151,18 +164,23 @@ object Main {
       Jdip.drop
     }
     
-    usernameOption.flatMap(username => 
-      passwordOption.flatMap(password => 
-    	configFileOption.flatMap(configFile =>
-    		(dropOnlyFlag match {
-    		  case Some(u) => None
-    		  case None => Some(transaction {
-    		    Jdip.create
-    		  })
-    		}).flatMap((v: Unit) => Some(insertIntoTables(username, password, configFile)))
-    	)
-    ))
+    def handleDropOnlyFlag(dropOnlyFlag: Option[_]): Option[_] = 
+      if (dropOnlyFlag.isDefined) {
+        None
+      } else {
+        Some(transaction { Jdip.create })
+      }
     
+    try {
+	    for (c <- configurationOption; 
+	      _ <- handleDropOnlyFlag(dropOnlyFlag)
+	    ) yield (
+	      insertIntoTablesReader.value(c)    
+	    )
+    } catch {
+      case ex: org.postgresql.util.PSQLException => ex.printStackTrace()
+    }
+	    
     println("The program terminated successfully")
     sys.exit(0)
   }

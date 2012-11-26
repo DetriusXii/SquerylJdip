@@ -40,7 +40,7 @@ class PotentialConvoyOrderCreator(game: Game, dbQueries: DBQueries) {
             allDiplomacyUnitsForGame.filter(_.unitType.equals(UnitType.FLEET))
           val allLandUnitLocations = allLandUnits.
             map((ldpu: DiplomacyUnit) => dbQueries.
-                locations.find(_.id == ldpu.unitLocation)).
+                locations.find(_.id == ldpu.unitLocationID)).
                 flatten
           allLandUnitLocations.map((loc: Location) => {
             val allPaths: List[List[Location]] = 

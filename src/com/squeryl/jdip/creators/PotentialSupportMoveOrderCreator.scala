@@ -13,7 +13,7 @@ class PotentialSupportMoveOrderCreator(game: Game, dbQueries: DBQueries) {
     
     val movesForAllOtherUnits: List[(Location, List[Location])] = 
       allOtherUnits.map(dpu => {
-        val otherUnitLocation = dbQueries.locations.find(_.id == dpu.unitLocation)
+        val otherUnitLocation = dbQueries.locations.find(_.id == dpu.unitLocationID)
         otherUnitLocation.map((_, potentialMoveOrderCreator.getTotalMoves(dpu)))
       }).flatten
     

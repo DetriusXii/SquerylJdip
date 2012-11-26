@@ -13,5 +13,5 @@ case class Location(province: String, coast: String) extends KeyedEntity[Int] {
 	def this() = this("", "")
 	
 	lazy val sourceLocations = Jdip.adjacencies.right(this)
-	lazy val destinationAdjacencies = Jdip.adjacencies.left(this)
+	lazy val destinationLocations = Jdip.adjacencies.left(this)
 }

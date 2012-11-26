@@ -26,10 +26,6 @@ object Jdip extends PostgreSchema("jdip") {
    val uniqueProvinceNames = table[UniqueProvinceName]("unique_province_names", schemaName)
    val diplomacyUnits = table[DiplomacyUnit]("diplomacy_units", schemaName)
    val ownedProvinces = table[OwnedProvince]("owned_provinces", schemaName)
-   val potentialMoveOrders = 
-     table[PotentialMoveOrder]("potential_move_orders", schemaName)
-   val potentialSupportHoldOrders =
-     table[PotentialSupportHoldOrder]("potential_support_hold_orders", schemaName)
    val potentialSupportMoveOrders =
      table[PotentialSupportMoveOrder]("potential_support_move_orders", schemaName)
    val potentialConvoyOrders =
@@ -58,6 +54,22 @@ object Jdip extends PostgreSchema("jdip") {
       (l1, l2, adjacency) => (l1.id === adjacency.srcLocation, l2.id === adjacency.dstLocation)
   )	
   	
+  val potentialMoveOrders = 
+    manyToManyRelation(diplomacyUnits, 
+      locations, 
+      "potential_move_orders", 
+      schemaName).via[PotentialMoveOrder]((dpu, loc, pmo) => 
+          (dpu.id === pmo.diplomacyUnitID, loc.id === pmo.moveLocationID))
+          
+  
+  val potentialSupportHoldOrders =
+    manyToManyRelation(diplomacyUnits, 
+      locations,
+      "potential_support_hold_orders", 
+      schemaName).via[PotentialSupportHoldOrder]((dpu, loc, psho) => 
+      	(dpu.id === psho.diplomacyUnitID, loc.id === psho.supportHoldLocationID)
+      )
+  
   val gtSeasonForeignKey = oneToManyRelation(seasons, gameTimes).via((s, gt) => s.id === gt.gameSeason)
   val gtPhaseForeignKey = oneToManyRelation(phases, gameTimes).via((p, gt) => p.id === gt.gamePhase)
   
@@ -128,7 +140,45 @@ object Jdip extends PostgreSchema("jdip") {
     gt.id === owp.gameTimeID
   )
   
+  val psmoDiplomacyUnitForeignKey = 
+    oneToManyRelation(diplomacyUnits, potentialSupportMoveOrders).
+    via((dpu, psmo) =>
+      dpu.id === psmo.diplomacyUnitID
+    )
+  val psmoSourceLocationForeignKey =
+    oneToManyRelation(locations, potentialSupportMoveOrders).
+    via((loc, psmo) =>
+      loc.id === psmo.supportMoveSourceLocationID
+    )
+  val psmoTargetLocationForeignKey =
+    oneToManyRelation(locations, potentialSupportMoveOrders).
+    via((loc, psmo) =>
+      loc.id === psmo.supportMoveTargetLocationID  
+    )
   
+  val pcoDiplomacyUnitForeignKey =
+    oneToManyRelation(diplomacyUnits, potentialConvoyOrders).
+    via((dpu, pco) =>
+      dpu.id === pco.diplomacyUnitID
+    )
+  val pcoSourceLocationForeignKey =
+    oneToManyRelation(locations, potentialConvoyOrders).
+    via((loc, pco) =>
+      loc.id === pco.convoySourceLocationID  
+    )
+  val pcoTargetLocationForeignKey =
+    oneToManyRelation(locations, potentialConvoyOrders).
+    via((loc, pco) =>
+      loc.id === pco.convoyTargetLocationID
+    )
+  
+  on(potentialSupportMoveOrders)(psmo => declare(
+    psmo.id is(autoIncremented)
+  ))
+  
+  on(potentialConvoyOrders)(pco => declare(
+    pco.id is(autoIncremented)    
+  ))
   
   on(diplomacyUnits)(dpu => declare(
 		  columns(dpu.gamePlayerEmpireID, dpu.unitNumber, dpu.gameTimeID) are(unique)
