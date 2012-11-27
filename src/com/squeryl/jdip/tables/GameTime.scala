@@ -17,8 +17,8 @@ object GameTime {
   private val SPRING_PHASE_LIST = Phase.MOVEMENT :: Phase.RETREAT :: Nil
   private val FALL_PHASE_LIST = Phase.MOVEMENT :: Phase.RETREAT :: Phase.BUILD :: Nil
   
-  def getGameTimes = (MIN_GAME_YEAR until MAX_GAME_YEAR) flatMap ((year: Int) => {
-    SEASON_LIST map ((season: SeasonCaseClass) => {
+  def getGameTimes: List[GameTime] = (MIN_GAME_YEAR until MAX_GAME_YEAR).flatMap((year: Int) => {
+    SEASON_LIST.flatMap((season: SeasonCaseClass) => {
       season match {
         case Spring(seasonName: String) => SPRING_PHASE_LIST map ((phase: String) => {
           new GameTime(year, seasonName, phase)
@@ -28,6 +28,6 @@ object GameTime {
         })
       }
     })
-  })
+  }).toList
   
 }

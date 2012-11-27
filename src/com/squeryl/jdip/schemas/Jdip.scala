@@ -23,7 +23,8 @@ object Jdip extends PostgreSchema("jdip") {
    val messages = table[Message]("messages", schemaName)
    val provinces = table[Province]("provinces", schemaName)
    val coasts = table[Coast]("coasts", schemaName)
-   val uniqueProvinceNames = table[UniqueProvinceName]("unique_province_names", schemaName)
+   val uniqueProvinceNames = 
+     table[UniqueProvinceName]("unique_province_names", schemaName)
    val diplomacyUnits = table[DiplomacyUnit]("diplomacy_units", schemaName)
    val ownedProvinces = table[OwnedProvince]("owned_provinces", schemaName)
    val potentialSupportMoveOrders =
@@ -172,6 +173,10 @@ object Jdip extends PostgreSchema("jdip") {
       loc.id === pco.convoyTargetLocationID
     )
   
+  on(gameTimes)(gt => declare(
+    gt.id is(autoIncremented)    
+  ))
+    
   on(potentialSupportMoveOrders)(psmo => declare(
     psmo.id is(autoIncremented)
   ))

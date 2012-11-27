@@ -17,5 +17,5 @@ object Phase {
   val RETREAT = "Retreat"
   val BUILD = "Build"
   
-  def getPhases = MOVEMENT :: RETREAT :: BUILD :: Nil map (new Phase(_))
+  def getPhases: List[Phase] = MOVEMENT :: RETREAT :: BUILD :: Nil map (new Phase(_))
 }

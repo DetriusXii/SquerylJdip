@@ -22,5 +22,5 @@ object Season {
   val FALL = Fall(FALL_NAME)
   
   
-  def getSeasons = SPRING_NAME :: FALL_NAME :: Nil map (new Season(_))
+  def getSeasons: List[Season] = SPRING_NAME :: FALL_NAME :: Nil map (new Season(_))
 }

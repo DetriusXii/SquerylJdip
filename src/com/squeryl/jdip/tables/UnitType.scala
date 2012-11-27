@@ -15,5 +15,5 @@ object UnitType {
   val ARMY = "army"
   val FLEET = "fleet"
   
-  def getUnitTypes = ARMY :: FLEET :: Nil map (new UnitType(_))
+  def getUnitTypes: List[UnitType] = ARMY :: FLEET :: Nil map (new UnitType(_))
 }

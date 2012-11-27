@@ -27,6 +27,38 @@ class RevisedPostgreSqlAdapter extends org.squeryl.adapters.PostgreSqlAdapter {
               sb.toString
             } 
   
+  override def sequenceName(t: Table[_]) =
+    t.prefix match {
+      case Some(prefix: String) => 
+        "%s.%s" format (prefix, t.prefixedPrefixedName("seq_"))
+      case None => t.prefixedPrefixedName("seq_")
+    }
+  
+  override def writeInsert[T](o: T, t: Table[T], sw: StatementWriter):Unit = {
+	val o_ = o.asInstanceOf[AnyRef]
+	val autoIncPK = t.posoMetaData.fieldsMetaData.find(fmd => fmd.isAutoIncremented)
+
+    if(autoIncPK == None) {
+      super.writeInsert(o, t, sw)
+      return
+    }
+
+	val sequenceName = t.prefix match {
+	  case Some(prefix: String) => "%s.%s" format (prefix, autoIncPK.get.sequenceName)
+	  case None => autoIncPK.get.sequenceName
+	}
+    val f = getInsertableFields(t.posoMetaData.fieldsMetaData)
+    val colNames = List(autoIncPK.get) ::: f.toList
+    val colVals = List("nextval('" + quoteName(sequenceName) + "')") ::: f.map(fmd => writeValue(o_, fmd, sw)).toList
+
+    sw.write("insert into ");
+    sw.write(quoteName(t.prefixedName));
+    sw.write(" (");
+    sw.write(colNames.map(fmd => quoteName(fmd.columnName)).mkString(", "));
+    sw.write(") values ");
+    sw.write(colVals.mkString("(",",",")"));
+  }
+  
   override def postCreateTable(t: Table[_], printSinkWhenWriteOnlyMode: Option[String => Unit]) = {
 
     val autoIncrementedFields = t.posoMetaData.fieldsMetaData.filter(_.isAutoIncremented)
@@ -35,7 +67,7 @@ class RevisedPostgreSqlAdapter extends org.squeryl.adapters.PostgreSqlAdapter {
     for(fmd <-autoIncrementedFields) {
       val sw = new StatementWriter(false, this)
       val sequenceName = t.prefix match {
-        case Some(prefix: String) => "%s.%s" format (t.schema, fmd.sequenceName)
+        case Some(prefix: String) => "%s.%s" format (prefix, fmd.sequenceName)
         case None => fmd.sequenceName
       }
       

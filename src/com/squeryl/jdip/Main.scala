@@ -19,14 +19,10 @@ import scalaz.Identity
 import com.squeryl.jdip.queries.DBQueries
 
 object Main {
-	
-  /**
-   * @param args the command line arguments
-   */
   
   private def insertIntoTables(username: String, 
       password: String, configFilepath: String, 
-      conn: java.sql.Connection): Unit = {
+      conn: () => java.sql.Connection): Unit =
     transaction {
       EmpireCreator.empireList map (Jdip.empires.insert(_))
       PlayerCreator.playersList map (Jdip.players.insert(_))
@@ -36,7 +32,9 @@ object Main {
       Season.getSeasons map (Jdip.seasons.insert(_))
       Phase.getPhases map (Jdip.phases.insert(_))
       
-      GameTime.getGameTimes.map(Jdip.gameTimes.insert(_))
+      Jdip.gameTimes.insert(GameTime.getGameTimes)
+      
+      
       
       UnitType.getUnitTypes map (Jdip.unitTypes.insert(_))
       OrderType.getOrderTypes map (Jdip.orderTypes.insert(_))
@@ -105,7 +103,7 @@ object Main {
           Jdip.diplomacyUnits.toList, 
           Jdip.locations.toList).map(Jdip.ownedProvinces.insert(_))
           
-      val dbQueries = new DBQueries(conn)
+      val dbQueries = new DBQueries(conn())
       val activeGames: List[Game] = dbQueries.getAllActiveGames()
       
       activeGames.foreach((g: Game) => {
@@ -123,12 +121,13 @@ object Main {
           insert(pcoc.createPotentialConvoyOrders)
       })
     }
-  }
   
   private def insertIntoTablesReader: ReaderT[Identity, Configuration, Unit] =
     ReaderT((c: Configuration) => 
       Identity(
-        insertIntoTables(c.username, c.password, c.configFile, c.connection)))
+        insertIntoTables(c.username, c.password, c.configFile, c.connection)
+      )
+    )
  
   
   def main(args: Array[String]): Unit = {
@@ -147,15 +146,14 @@ object Main {
       val username = args(args.indexOf(usernameFlag) + 1)
       val password = args(args.indexOf(passwordFlag) + 1)
       val configFile = args(args.indexOf(configFileFlag) + 1)
-      val connection = 
-        java.sql.DriverManager.getConnection(jdbcURL, username, password)
-      Configuration(username, password, configFile, jdbcURL, connection)
+      Configuration(username, password, configFile, jdbcURL, () => 
+        java.sql.DriverManager.getConnection(jdbcURL, username, password))
     }
     
     
     SessionFactory.concreteFactory = for (
         configuration <- configurationOption
-    ) yield (() => Session.create(configuration.connection,
+    ) yield (() => Session.create(configuration.connection(),
     		  new RevisedPostgreSqlAdapter
 		  )
 	)
@@ -171,16 +169,13 @@ object Main {
         Some(transaction { Jdip.create })
       }
     
-    try {
 	    for (c <- configurationOption; 
 	      _ <- handleDropOnlyFlag(dropOnlyFlag)
 	    ) yield (
-	      insertIntoTablesReader.value(c)    
+	      insertIntoTables(c.username, c.password, c.configFile,
+	          c.connection)  
 	    )
-    } catch {
-      case ex: org.postgresql.util.PSQLException => ex.printStackTrace()
-    }
-	    
+    
     println("The program terminated successfully")
     sys.exit(0)
   }
