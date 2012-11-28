@@ -24,25 +24,23 @@ object Main {
       password: String, configFilepath: String, 
       conn: () => java.sql.Connection): Unit =
     transaction {
-      EmpireCreator.empireList map (Jdip.empires.insert(_))
-      PlayerCreator.playersList map (Jdip.players.insert(_))
+      Jdip.empires.insert(EmpireCreator.empireList)
+      Jdip.players.insert(PlayerCreator.playersList)
       
       
       Jdip.players.insert(new Player("DetriusXii", password))
-      Season.getSeasons map (Jdip.seasons.insert(_))
-      Phase.getPhases map (Jdip.phases.insert(_))
+      Jdip.seasons.insert(Season.getSeasons)
+      Jdip.phases.insert(Phase.getPhases)
       
       Jdip.gameTimes.insert(GameTime.getGameTimes)
       
+      Jdip.unitTypes.insert(UnitType.getUnitTypes)
+      Jdip.orderTypes.insert(OrderType.getOrderTypes)
+      Jdip.gameStates.insert(GameState.getGameStates)
       
-      
-      UnitType.getUnitTypes map (Jdip.unitTypes.insert(_))
-      OrderType.getOrderTypes map (Jdip.orderTypes.insert(_))
-      GameState.getGameStates map (Jdip.gameStates.insert(_))
-    
-      OrderTypeUnitType.getOrderTypeUnitTypes map (Jdip.orderTypeUnitTypes.insert(_))
-      Coast.getCoasts map (Jdip.coasts.insert(_))
-      
+      Jdip.orderTypeUnitTypes.insert(OrderTypeUnitType.getOrderTypeUnitTypes)
+     
+      Jdip.coasts.insert(Coast.getCoasts)
       
       ConfigXMLLoader.findFirstAdjacency(configFilepath) match {
         case Some(u: scala.xml.Elem) => {
@@ -99,27 +97,14 @@ object Main {
           }  
         }
       
-      val ownedProvinces = OwnedProvince.getOwnedProvinces(
-          Jdip.diplomacyUnits.toList, 
-          Jdip.locations.toList).map(Jdip.ownedProvinces.insert(_))
-          
-      val dbQueries = new DBQueries(conn())
-      val activeGames: List[Game] = dbQueries.getAllActiveGames()
       
-      activeGames.foreach((g: Game) => {
-        val pmoc = new PotentialMoveOrderCreator(g, dbQueries)
-        val pshoc = new PotentialSupportHoldOrderCreator(g, dbQueries)
-        val psmoc = new PotentialSupportMoveOrderCreator(g, dbQueries)
-        val pcoc = new PotentialConvoyOrderCreator(g, dbQueries)
-        
-        Jdip.potentialMoveOrders.insert(pmoc.createPotentialMoveOrders)
-        Jdip.potentialSupportHoldOrders.
-          insert(pshoc.createPotentialSupportHoldOrders)
-        Jdip.potentialSupportMoveOrders.
-          insert(psmoc.createPotentialSupportMoveOrders)
-        Jdip.potentialConvoyOrders.
-          insert(pcoc.createPotentialConvoyOrders)
-      })
+      Jdip.ownedProvinces.insert(OwnedProvince.getOwnedProvinces(
+          Jdip.diplomacyUnits.toList, 
+          Jdip.locations.toList))
+          
+      
+      
+      
     }
   
   private def insertIntoTablesReader: ReaderT[Identity, Configuration, Unit] =
@@ -129,6 +114,28 @@ object Main {
       )
     )
  
+  private def populatePotentialOrders(c: java.sql.Connection): Unit = {
+    val dbQueries = new DBQueries(c)
+    
+    val activeGames = dbQueries.getAllActiveGames()
+    activeGames.foreach((g: Game) => {
+        val pmoc = new PotentialMoveOrderCreator(g, dbQueries)
+        val pshoc = new PotentialSupportHoldOrderCreator(g, dbQueries)
+        val psmoc = new PotentialSupportMoveOrderCreator(g, dbQueries)
+        val pcoc = new PotentialConvoyOrderCreator(g, dbQueries)
+        
+        transaction {
+	        Jdip.potentialMoveOrders.insert(pmoc.createPotentialMoveOrders)
+	        Jdip.potentialSupportHoldOrders.
+	          insert(pshoc.createPotentialSupportHoldOrders)
+	        Jdip.potentialSupportMoveOrders.
+	          insert(psmoc.createPotentialSupportMoveOrders)
+	        Jdip.potentialConvoyOrders.
+	          insert(pcoc.createPotentialConvoyOrders)
+        }
+      })
+    
+  }
   
   def main(args: Array[String]): Unit = {
     val fullDriverClassName = "org.postgresql.Driver"
@@ -169,12 +176,13 @@ object Main {
         Some(transaction { Jdip.create })
       }
     
-	    for (c <- configurationOption; 
-	      _ <- handleDropOnlyFlag(dropOnlyFlag)
-	    ) yield (
-	      insertIntoTables(c.username, c.password, c.configFile,
-	          c.connection)  
-	    )
+    for (c <- configurationOption; 
+      _ <- handleDropOnlyFlag(dropOnlyFlag)
+    ) yield {
+      insertIntoTables(c.username, c.password, c.configFile,
+          c.connection)
+      populatePotentialOrders(c.connection())
+    }
     
     println("The program terminated successfully")
     sys.exit(0)
