@@ -31,6 +31,8 @@ object Jdip extends PostgreSchema("jdip") {
      table[PotentialSupportMoveOrder]("potential_support_move_orders", schemaName)
    val potentialConvoyOrders =
      table[PotentialConvoyOrder]("potential_convoy_orders", schemaName)
+   val gameMaps =
+     table[GameMap]("game_maps", schemaName)
    
   val gamePlayers = 
      manyToManyRelation(games, players, "game_players", schemaName).
@@ -172,7 +174,12 @@ object Jdip extends PostgreSchema("jdip") {
     via((loc, pco) =>
       loc.id === pco.convoyTargetLocationID
     )
-  
+    
+  val gmGameForeignKey = oneToManyRelation(games, gameMaps).
+    via((g, gm) => g.id === gm.gameID)
+  val gmGameTimeForeignKey = oneToManyRelation(gameTimes, gameMaps).
+    via((gt, gm) => gt.id === gm.gameTimeID)
+    
   on(gameTimes)(gt => declare(
     gt.id is(autoIncremented)    
   ))

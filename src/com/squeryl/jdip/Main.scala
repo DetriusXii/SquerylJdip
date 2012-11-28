@@ -118,7 +118,8 @@ object Main {
     ReaderT[Identity, Configuration, Unit] =
       ReaderT((c: Configuration) => 
         Identity(populatePotentialOrders(c.connection())))
-    
+  
+  private def renderSVGImage
     
   private def populatePotentialOrders(c: java.sql.Connection): Unit = {
     val dbQueries = new DBQueries(c)

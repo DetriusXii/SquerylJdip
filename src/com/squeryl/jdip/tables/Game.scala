@@ -19,4 +19,5 @@ case class Game(id: String,
   
   lazy val players = Jdip.gamePlayers.left(this)
   
+  lazy val gameMaps = Jdip.gmGameForeignKey.left(this)
 } 
