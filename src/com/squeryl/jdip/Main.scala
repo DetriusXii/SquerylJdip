@@ -114,6 +114,12 @@ object Main {
       )
     )
  
+  private def populatePotentialOrdersReader: 
+    ReaderT[Identity, Configuration, Unit] =
+      ReaderT((c: Configuration) => 
+        Identity(populatePotentialOrders(c.connection())))
+    
+    
   private def populatePotentialOrders(c: java.sql.Connection): Unit = {
     val dbQueries = new DBQueries(c)
     
@@ -179,9 +185,9 @@ object Main {
     for (c <- configurationOption; 
       _ <- handleDropOnlyFlag(dropOnlyFlag)
     ) yield {
-      insertIntoTables(c.username, c.password, c.configFile,
-          c.connection)
-      populatePotentialOrders(c.connection())
+      ReaderT.readerTBind[Identity, Configuration].
+      	bind[Unit, Unit](insertIntoTablesReader, 
+      	  _ => populatePotentialOrdersReader).value(c).value
     }
     
     println("The program terminated successfully")
