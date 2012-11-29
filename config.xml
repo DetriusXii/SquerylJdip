@@ -20,4 +20,10 @@
 		<name>ADJACENCY_FILENAME</name>
 		<value>std_adjacency.xml</value>
 	</appsetting>
+	<appsetting>
+		<name>COMBINED_SVG_FULLFILENAME</name>
+		<values>
+			<value>C:\cygwin\home\AJELOVIC\PlayInScala\public\images\dipmapwithsymbols.svg</value>
+		</values>
+	</appsetting>
 </configuration>

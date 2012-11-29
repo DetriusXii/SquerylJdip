@@ -134,7 +134,7 @@ object Jdip extends PostgreSchema("jdip") {
   )
 
   val owpProvinceForeignKey = oneToManyRelation(provinces, ownedProvinces).via((pr, owp) =>
-  	pr.id === owp.province
+  	pr.id === owp.provinceID
   )
   val owpGamePlayerEmpireForeignKey = oneToManyRelation(gamePlayerEmpires, ownedProvinces).via((gpe, owp) =>
   	gpe.id === owp.gamePlayerEmpireID

@@ -17,6 +17,8 @@ import com.squeryl.jdip.creators._
 import scalaz.ReaderT
 import scalaz.Identity
 import com.squeryl.jdip.queries.DBQueries
+import com.squeryl.jdip.renderers.JdipSVGRenderer
+import com.squeryl.jdip.queries.DeleteStatements
 
 object Main {
   
@@ -98,13 +100,6 @@ object Main {
         }
       
       
-      Jdip.ownedProvinces.insert(OwnedProvince.getOwnedProvinces(
-          Jdip.diplomacyUnits.toList, 
-          Jdip.locations.toList))
-          
-      
-      
-      
     }
   
   private def insertIntoTablesReader: ReaderT[Identity, Configuration, Unit] =
@@ -119,7 +114,42 @@ object Main {
       ReaderT((c: Configuration) => 
         Identity(populatePotentialOrders(c.connection())))
   
-  private def renderSVGImage
+  private def renderSVGImageReader: ReaderT[Identity, Configuration, Unit] =
+    ReaderT((c: Configuration) => {
+      val combinedSVGFilepathOption =
+        ConfigXMLLoader.findFirstCombinedSVG(c.configFile)
+      combinedSVGFilepathOption.map((filepath: String) => {
+        val dbQueries = new DBQueries(c.connection())
+        val deleteStatements = new DeleteStatements(c.connection())
+        val jdipSVGRenderer = new JdipSVGRenderer(dbQueries, filepath)
+        
+        val activeGames = dbQueries.getAllActiveGames()
+        activeGames.foreach((g: Game) => {
+          deleteStatements.deleteOwnedProvincesForGame(g)
+          val diplomacyUnitsForGame
+           = dbQueries.getDiplomacyUnitsForGameAtCurrentGameTime(g)
+          val ownedProvincesForGame = 
+            OwnedProvince.getOwnedProvinces(diplomacyUnitsForGame, 
+              dbQueries.locations)
+          
+          transaction {
+            Jdip.ownedProvinces.insert(ownedProvincesForGame)
+          }
+          
+          val renderedDocument = jdipSVGRenderer.getRenderedDocument(g)
+          val gameMap = 
+            new GameMap(g.id, 
+                g.gameTime, 
+                renderedDocument.toString.getBytes)
+          
+          transaction {
+            Jdip.gameMaps.insert(gameMap)
+          }
+        })
+      })
+      
+      Identity()
+    })
     
   private def populatePotentialOrders(c: java.sql.Connection): Unit = {
     val dbQueries = new DBQueries(c)
@@ -186,9 +216,12 @@ object Main {
     for (c <- configurationOption; 
       _ <- handleDropOnlyFlag(dropOnlyFlag)
     ) yield {
-      ReaderT.readerTBind[Identity, Configuration].
+      val binder = ReaderT.readerTBind[Identity, Configuration]
+      val pReader = binder.
       	bind[Unit, Unit](insertIntoTablesReader, 
-      	  _ => populatePotentialOrdersReader).value(c).value
+      	  _ => populatePotentialOrdersReader)
+      binder.bind[Unit, Unit](pReader, 
+            _ => renderSVGImageReader).value(c).value
     }
     
     println("The program terminated successfully")

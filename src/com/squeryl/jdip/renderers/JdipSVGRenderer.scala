@@ -36,10 +36,13 @@ class JdipSVGRenderer(dbQueries: DBQueries, dipmapWithSymbolsFilepath: String) {
   val WIDTH_ATTRIBUTE = "width"
   val unitTypeRemap = Map(UnitType.ARMY -> "Army", UnitType.FLEET -> "Fleet")
   
-
-
-  def getUneditedDocument = 
-    DocumentBuilderFactory.newInstance.newDocumentBuilder.parse(new File(SVG_FILE_PATH))
+  def getUneditedDocument = {
+    val dbf = DocumentBuilderFactory.newInstance
+    dbf.setValidating(false)
+    dbf.setNamespaceAware(false)
+    val db = dbf.newDocumentBuilder()
+    db.parse(new File(dipmapWithSymbolsFilepath))
+  }
 
   implicit def getElementByIdOption(element: Element): Option[Element] =
     if (element != null) {
@@ -110,7 +113,7 @@ class JdipSVGRenderer(dbQueries: DBQueries, dipmapWithSymbolsFilepath: String) {
       document.getElementsByTagName("%s:%s" format (JDIP_NAMESPACE, PROVINCE_LABEL))
     
     diplomacyUnits.map(dpu => {
-      val locationOption = dbQueries.locations.find(_.id == dpu.unitLocation)
+      val locationOption = dbQueries.locations.find(_.id == dpu.unitLocationID)
       
       val gamePlayerEmpireOption = dbQueries.getGamePlayerEmpire(dpu.gamePlayerEmpireID)
       val empireOption = gamePlayerEmpireOption.flatMap(gpe => 

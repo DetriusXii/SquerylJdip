@@ -13,6 +13,7 @@ object ConfigXMLLoader {
 	val VARIANT_FILENAME = "VARIANT_FILENAME"
 	val JDIP_MAP_SVG_FILENAME = "JDIP_MAP_SVG_FILENAME"
 	val ADJACENCY_FILENAME = "ADJACENCY_FILENAME"
+	val COMBINED_SVG_FULLFILENAME = "COMBINED_SVG_FULLFILENAME"
 	  
 	 def findFirstVariant(configFilepath: String) : Elem = {
 	  val configuration = XML.load(configFilepath)
@@ -109,5 +110,24 @@ object ConfigXMLLoader {
 			  	)) yield ((new File(searchFile, adjacencyFilename)).getAbsolutePath)
 			  	
 	  absolutePathsListT.head.map(XML.load(_))
+	}
+
+	
+	def findFirstCombinedSVG(configFilepath: String): Option[String] = {
+	  val configuration = XML.load(configFilepath)
+	  val appSettingNodeSeq = configuration \\ APPSETTING_TAGNAME
+	  
+	  val combinedSVGAppsettingNode = appSettingNodeSeq.find(_.child.exists(u =>
+	  	u.label.equals(NAME_TAGNAME) && u.text.equals(COMBINED_SVG_FULLFILENAME)
+	  ))
+	  
+	  val filePaths = 
+	    combinedSVGAppsettingNode.map(_ \\ VALUE_TAGNAME map (_.text)).flatten
+	  filePaths.find(filepath => {
+	    val file = new File(filepath.trim())
+	    val exists = file.exists
+	    val isFile = file.isFile
+	    file.exists && file.isFile
+	  })
 	}
 }

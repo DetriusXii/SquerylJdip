@@ -6,9 +6,13 @@
 package com.squeryl.jdip.tables
 
 import org.squeryl.KeyedEntity
+import com.squeryl.jdip.schemas.Jdip
 
-case class GamePlayerEmpire(gamePlayerKey: Int, empireName: String) extends KeyedEntity[Int] {
+case class GamePlayerEmpire(gamePlayerKey: Int, empireName: String) extends 
+	KeyedEntity[Int] {
   def this() = this(0, "")
   
   val id = 0
+  
+  lazy val ownedProvinces = Jdip.owpGamePlayerEmpireForeignKey.left(this)
 }
