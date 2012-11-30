@@ -233,10 +233,10 @@ class DBQueries(conn: java.sql.Connection) {
    def getGameTimesForGames(gameTimeIDs: List[Int]): List[GameTime] = {
      val dbSession = Session.create(conn, new RevisedPostgreSqlAdapter)
      using(dbSession) {
-       from(Jdip.gameTimes) {gt =>
+       from(Jdip.gameTimes) (gt =>
          where(gt.id in gameTimeIDs)
          select(gt)
-       }.toList
+       ).toList
      }
    }
    
@@ -250,10 +250,10 @@ class DBQueries(conn: java.sql.Connection) {
    def getAllActiveGames(): List[Game] = {
      val dbSession = Session.create(conn, new RevisedPostgreSqlAdapter)
      using(dbSession) {
-       from(Jdip.games) { (g: Game) =>
+       from(Jdip.games) ( (g: Game) =>
          where(g.gameState === GameState.ACTIVE)
          select(g)
-       }.toList
+       ).toList
      }
    }
 }
