@@ -87,7 +87,7 @@ object Main {
               gameTime <- Jdip.gameTimes.find(gt => gt.id == g1.gameTime)
           ) yield {
             update(Jdip.games)((g: Game) => where(g.id === g1.id)
-                set(g.gameState := GameState.ACTIVE))
+                set(g.gameStateID := GameState.ACTIVE))
             
             val diplomacyUnits = DiplomacyUnitCreator.getDiplomacyUnits(gamePlayerEmpires,
                 Jdip.empires,
@@ -139,7 +139,7 @@ object Main {
           val renderedDocument = jdipSVGRenderer.getRenderedDocument(g)
           val gameMap = 
             new GameMap(g.id, 
-                g.gameTime, 
+                g.gameTimeID, 
                 renderedDocument.toString.getBytes)
           
           transaction {

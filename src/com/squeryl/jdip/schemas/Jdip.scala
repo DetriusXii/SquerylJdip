@@ -77,10 +77,10 @@ object Jdip extends PostgreSchema("jdip") {
   val gtPhaseForeignKey = oneToManyRelation(phases, gameTimes).via((p, gt) => p.id === gt.gamePhase)
   
   val gamesGameStateForeignKey = oneToManyRelation(gameStates, games).via((gs, g) => {
-       gs.id === g.gameState
+       gs.id === g.gameStateID
     })
   val gamesGameTimeForeignKey = oneToManyRelation(gameTimes, games).via((gt, g) => {
-    gt.id === g.gameTime
+    gt.id === g.gameTimeID
   })
   
   val senderMessageForeignKey = 

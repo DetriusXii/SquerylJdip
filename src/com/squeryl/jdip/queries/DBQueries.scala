@@ -61,7 +61,7 @@ class DBQueries(conn: java.sql.Connection) {
     using(dbSession) {
       from(Jdip.ownedProvinces) (owp =>
         where(owp.gamePlayerEmpireID in gamePlayerEmpireQueryForGame(game) and 
-          owp.gameTimeID === game.gameTime
+          owp.gameTimeID === game.gameTimeID
         ) 
         select(owp)
       ).toList
@@ -109,7 +109,7 @@ class DBQueries(conn: java.sql.Connection) {
 	  from(Jdip.diplomacyUnits)(dpu => (
 	    where((dpu.unitType === UnitType.ARMY) and 
 	        (dpu.gamePlayerEmpireID in gamePlayerEmpireQueryForGame(game)) and
-	        (dpu.gameTimeID === game.gameTime)) 
+	        (dpu.gameTimeID === game.gameTimeID)) 
 	    select(dpu)
 	  )).toList
 	}
@@ -121,7 +121,7 @@ class DBQueries(conn: java.sql.Connection) {
       from(Jdip.diplomacyUnits)(dpu => (
         where((dpu.unitType === UnitType.FLEET) and 
     	  (dpu.gamePlayerEmpireID in gamePlayerEmpireQueryForGame(game)) and
-    	  (dpu.gameTimeID === game.gameTime)
+    	  (dpu.gameTimeID === game.gameTimeID)
         ) 
         select(dpu)
       )).toList
@@ -134,7 +134,7 @@ class DBQueries(conn: java.sql.Connection) {
 	  using(dbSession) {
 	    from(Jdip.diplomacyUnits)(dpu => 
 	      where((dpu.gamePlayerEmpireID in gamePlayerEmpireQueryForGame(game))
-	      	and (dpu.gameTimeID === game.gameTime))
+	      	and (dpu.gameTimeID === game.gameTimeID))
 	      select(dpu)
 	    ).toList
 	  }
@@ -190,7 +190,7 @@ class DBQueries(conn: java.sql.Connection) {
 	    where((gp.id === gamePlayerEmpire.gamePlayerKey) and
 	    		(g.id === gp.gameName) and
 	    		(dpu.gamePlayerEmpireID === gamePlayerEmpire.id) and
-	    		(dpu.gameTimeID === g.gameTime)
+	    		(dpu.gameTimeID === g.gameTimeID)
 	    )
 	  	select(dpu)
 	  ).toList
@@ -251,8 +251,18 @@ class DBQueries(conn: java.sql.Connection) {
      val dbSession = Session.create(conn, new RevisedPostgreSqlAdapter)
      using(dbSession) {
        from(Jdip.games) ( (g: Game) =>
-         where(g.gameState === GameState.ACTIVE)
+         where(g.gameStateID === GameState.ACTIVE)
          select(g)
+       ).toList
+     }
+   }
+   
+   def getLocationFromLocationIDs(locationIDs: List[Int]): List[Location] = {
+     val dbSession = Session.create(conn, new RevisedPostgreSqlAdapter)
+     using(dbSession) {
+       from(Jdip.locations)( (loc: Location) => 
+         where(loc.id in locationIDs)
+         select(loc)
        ).toList
      }
    }

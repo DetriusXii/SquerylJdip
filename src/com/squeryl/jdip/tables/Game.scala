@@ -10,8 +10,8 @@ import org.squeryl.PrimitiveTypeMode._
 import com.squeryl.jdip.schemas.Jdip
 
 case class Game(id: String, 
-			gameTime: Int,
-            gameState: String, 
+			gameTimeID: Int,
+            gameStateID: String, 
             gameFile: Option[BinaryType]) extends KeyedEntity[String] {
   def this() = this("", 0, GameState.WAITING, Some(new BinaryType(0)))
   
@@ -20,4 +20,6 @@ case class Game(id: String,
   lazy val players = Jdip.gamePlayers.left(this)
   
   lazy val gameMaps = Jdip.gmGameForeignKey.left(this)
+  lazy val gameTime = Jdip.gamesGameTimeForeignKey.right(this)
+  lazy val gameState = Jdip.gamesGameStateForeignKey.right(this)
 } 
