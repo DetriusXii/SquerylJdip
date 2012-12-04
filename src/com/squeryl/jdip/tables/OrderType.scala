@@ -13,8 +13,8 @@ case class OrderType(id: String, phase: String) extends KeyedEntity[String] {
 
 object OrderType {
   val MOVE = "Move"
-  val SUPPORT_MOVE = "Support Move"
-  val SUPPORT_HOLD = "Support Hold"
+  val SUPPORT_MOVE = "SupportMove"
+  val SUPPORT_HOLD = "SupportHold"
   val CONVOY = "Convoy"
   val HOLD = "Hold"
   val CONSTRUCT = "Construct"

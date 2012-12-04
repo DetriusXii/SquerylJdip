@@ -266,4 +266,14 @@ class DBQueries(conn: java.sql.Connection) {
        ).toList
      }
    }
+   
+   def getGameMapForGameAtCurrentTime(game: Game): Option[GameMap] = {
+     val dbSession = Session.create(conn, new RevisedPostgreSqlAdapter)
+     using(dbSession) {
+       from(Jdip.gameMaps)((gm: GameMap) => 
+       	 where(gm.gameID === game.id and gm.gameTimeID === game.gameTimeID)
+       	 select(gm)
+       ).firstOption
+     }
+   }
 }
