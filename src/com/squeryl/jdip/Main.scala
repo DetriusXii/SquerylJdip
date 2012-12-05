@@ -84,7 +84,7 @@ object Main {
         (u => Jdip.gamePlayerEmpires.insert(new GamePlayerEmpire(u._1, u._2)))
         if (gamePlayersQuery.size == 7) {
           for ( g1 <- game1;
-              gameTime <- Jdip.gameTimes.find(gt => gt.id == g1.gameTime)
+              gameTime <- Jdip.gameTimes.find(gt => gt.id == g1.gameTimeID)
           ) yield {
             update(Jdip.games)((g: Game) => where(g.id === g1.id)
                 set(g.gameStateID := GameState.ACTIVE))
@@ -112,15 +112,15 @@ object Main {
   private def populatePotentialOrdersReader: 
     ReaderT[Identity, Configuration, Unit] =
       ReaderT((c: Configuration) => 
-        Identity(populatePotentialOrders(c.connection())))
+        Identity(populatePotentialOrders(c.connection)))
   
   private def renderSVGImageReader: ReaderT[Identity, Configuration, Unit] =
     ReaderT((c: Configuration) => {
       val combinedSVGFilepathOption =
         ConfigXMLLoader.findFirstCombinedSVG(c.configFile)
       combinedSVGFilepathOption.map((filepath: String) => {
-        val dbQueries = new DBQueries(c.connection())
-        val deleteStatements = new DeleteStatements(c.connection())
+        val dbQueries = new DBQueries(c.connection)
+        val deleteStatements = new DeleteStatements(c.connection)
         val jdipSVGRenderer = new JdipSVGRenderer(dbQueries, filepath)
         
         val activeGames = dbQueries.getAllActiveGames()
@@ -151,7 +151,7 @@ object Main {
       Identity()
     })
     
-  private def populatePotentialOrders(c: java.sql.Connection): Unit = {
+  private def populatePotentialOrders(c: () => java.sql.Connection): Unit = {
     val dbQueries = new DBQueries(c)
     
     val activeGames = dbQueries.getAllActiveGames()
