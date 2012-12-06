@@ -5,14 +5,11 @@ import com.squeryl.jdip.adapters.RevisedPostgreSqlAdapter
 import org.squeryl.PrimitiveTypeMode._
 import com.squeryl.jdip.schemas.Jdip
 
-class DeleteStatements(conn: () => java.sql.Connection) {
+object DeleteStatements {
   def deleteOwnedProvincesForGame(game: Game): List[OwnedProvince] = {
-    val session = new Session(conn(), new RevisedPostgreSqlAdapter)
-    val dbQueries = new DBQueries(conn)
+    val ownedProvincesForGame = DBQueries.getOwnedProvincesForGame(game)
     
-    val ownedProvincesForGame = dbQueries.getOwnedProvincesForGame(game)
-    
-    using(session) {
+    transaction {
       ownedProvincesForGame.foreach(owpForGame =>
       	Jdip.ownedProvinces.deleteWhere(owp => owp.id === owpForGame.id)
       )

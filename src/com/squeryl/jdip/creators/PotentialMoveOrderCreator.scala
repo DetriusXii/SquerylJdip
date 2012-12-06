@@ -3,18 +3,18 @@ import com.squeryl.jdip.queries.DBQueries
 import com.squeryl.jdip.tables._
 import com.squeryl.jdip.functions._
 
-class PotentialMoveOrderCreator(game: Game, dbQueries: DBQueries) {
+class PotentialMoveOrderCreator(game: Game) {
   def getRegularMoves(diplomacyUnit: DiplomacyUnit): List[Location] =
-    dbQueries.getAdjacentLocationsForLocation(
-        dbQueries.getLocationFromDiplomacyUnit(diplomacyUnit))
+    DBQueries.getAdjacentLocationsForLocation(
+        DBQueries.getLocationForDiplomacyUnit(diplomacyUnit))
     
   def getMovesByConvoy(diplomacyUnit: DiplomacyUnit): List[Location] = {
     diplomacyUnit match {
       case DiplomacyUnit(UnitType.ARMY, _, unitLocation, _, _) => 
-        dbQueries.locations.filter(_.id == unitLocation).flatMap(loc => {
+        DBQueries.locations.filter(_.id == unitLocation).flatMap(loc => {
           val allPaths = 
-            findAllPathsExternal(dbQueries,
-                loc, dbQueries.getAllFleetUnitsForGame(game))
+            findAllPathsExternal(
+                loc, DBQueries.getAllFleetUnitsForGame(game))
           allPaths.map(_ match {
             case h :: tail => h
           })
@@ -28,7 +28,7 @@ class PotentialMoveOrderCreator(game: Game, dbQueries: DBQueries) {
   
   def createPotentialMoveOrders(): List[PotentialMoveOrder] = {
     val dpusForGame = 
-      dbQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
+      DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
     
     dpusForGame.foldLeft(Nil: List[PotentialMoveOrder])((u, v) => {
       val moveLocations = getTotalMoves(v)

@@ -2,18 +2,18 @@ package com.squeryl.jdip.creators
 import com.squeryl.jdip.tables._
 import com.squeryl.jdip.queries.DBQueries
 
-class PotentialSupportMoveOrderCreator(game: Game, dbQueries: DBQueries) {
+class PotentialSupportMoveOrderCreator(game: Game) {
   def getSupportMoves(diplomacyUnit: DiplomacyUnit, 
       allUnitsForGame: List[DiplomacyUnit]): 
 	  List[(Location, List[Location])] = {
     val allOtherUnits = 
       allUnitsForGame.filter(_.id != diplomacyUnit.id)
      
-    val potentialMoveOrderCreator = new PotentialMoveOrderCreator(game, dbQueries)
+    val potentialMoveOrderCreator = new PotentialMoveOrderCreator(game)
     
     val movesForAllOtherUnits: List[(Location, List[Location])] = 
       allOtherUnits.map(dpu => {
-        val otherUnitLocation = dbQueries.locations.find(_.id == dpu.unitLocationID)
+        val otherUnitLocation = DBQueries.locations.find(_.id == dpu.unitLocationID)
         otherUnitLocation.map((_, potentialMoveOrderCreator.getTotalMoves(dpu)))
       }).flatten
     
@@ -40,7 +40,7 @@ class PotentialSupportMoveOrderCreator(game: Game, dbQueries: DBQueries) {
   
   
   def createPotentialSupportMoveOrders(): List[PotentialSupportMoveOrder] = {
-    val dpusForGame = dbQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
+    val dpusForGame = DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
     
     dpusForGame.foldLeft(Nil: List[PotentialSupportMoveOrder])((u, v) => {
       val supportMovesForGame = getSupportMoves(v, dpusForGame)

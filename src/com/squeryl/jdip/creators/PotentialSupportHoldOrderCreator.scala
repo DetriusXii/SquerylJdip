@@ -2,17 +2,17 @@ package com.squeryl.jdip.creators
 import com.squeryl.jdip.queries.DBQueries
 import com.squeryl.jdip.tables._
 
-class PotentialSupportHoldOrderCreator(game: Game, dbQueries: DBQueries) {
+class PotentialSupportHoldOrderCreator(game: Game) {
   def getSupportHolds(diplomacyUnit: DiplomacyUnit): List[Location] = {
-    val unitLocation = dbQueries.getLocationFromDiplomacyUnit(diplomacyUnit)
+    val unitLocation = DBQueries.getLocationForDiplomacyUnit(diplomacyUnit)
     val adjacentLocations = 
-      dbQueries.getAdjacentLocationsForLocation(unitLocation)
+      DBQueries.getAdjacentLocationsForLocation(unitLocation)
     val provincialLocations =
-      dbQueries.locations.filter(_ match {
+      DBQueries.locations.filter(_ match {
         case Location(province, _) => 
           adjacentLocations.exists(_.province.equals(province))
       })
-    val allUnits = dbQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
+    val allUnits = DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
     val provincialLocationsWithUnitPresent =
       provincialLocations.filter(loc => allUnits.exists(_.unitLocation == loc.id))
     provincialLocationsWithUnitPresent
@@ -20,7 +20,7 @@ class PotentialSupportHoldOrderCreator(game: Game, dbQueries: DBQueries) {
   
   def createPotentialSupportHoldOrders(): List[PotentialSupportHoldOrder] = {
     val dpusForGame = 
-      dbQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
+      DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
       
     dpusForGame.foldLeft(Nil: List[PotentialSupportHoldOrder])((u, v) => {
       val supportHoldsForUnit = getSupportHolds(v)

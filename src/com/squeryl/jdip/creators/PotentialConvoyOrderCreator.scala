@@ -3,9 +3,9 @@ import com.squeryl.jdip.queries.DBQueries
 import com.squeryl.jdip.tables._
 import com.squeryl.jdip.functions._
 
-class PotentialConvoyOrderCreator(game: Game, dbQueries: DBQueries) {
+class PotentialConvoyOrderCreator(game: Game) {
   def createPotentialConvoyOrders(): List[PotentialConvoyOrder] = {
-	val dpusForGame = dbQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
+	val dpusForGame = DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
 	
 	dpusForGame.foldLeft(Nil: List[PotentialConvoyOrder])((u, v) => {
 	  
@@ -25,8 +25,8 @@ class PotentialConvoyOrderCreator(game: Game, dbQueries: DBQueries) {
 	  List[(Location, List[Location])] = {
     diplomacyUnit match {
       case DiplomacyUnit(UnitType.FLEET, _, unitLocation, _, _) => {
-        dbQueries.locations.find(_.id == unitLocation).flatMap(loc => {
-          val isCoastal = dbQueries.hasLandLocation(loc)
+        DBQueries.locations.find(_.id == unitLocation).flatMap(loc => {
+          val isCoastal = DBQueries.hasLandLocation(loc)
 
           if (isCoastal) {
             None
@@ -39,12 +39,12 @@ class PotentialConvoyOrderCreator(game: Game, dbQueries: DBQueries) {
           val allFleetUnits: List[DiplomacyUnit] = 
             allDiplomacyUnitsForGame.filter(_.unitType.equals(UnitType.FLEET))
           val allLandUnitLocations = allLandUnits.
-            map((ldpu: DiplomacyUnit) => dbQueries.
+            map((ldpu: DiplomacyUnit) => DBQueries.
                 locations.find(_.id == ldpu.unitLocationID)).
                 flatten
           allLandUnitLocations.map((loc: Location) => {
             val allPaths: List[List[Location]] = 
-              findAllPathsExternal(dbQueries,loc, allFleetUnits)
+              findAllPathsExternal(loc, allFleetUnits)
             val targetDestinations: List[Location] = 
               allPaths.filter((path: List[Location]) => {
                 path.exists(_.id == fleetLoc.id)

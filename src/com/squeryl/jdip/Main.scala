@@ -119,18 +119,16 @@ object Main {
       val combinedSVGFilepathOption =
         ConfigXMLLoader.findFirstCombinedSVG(c.configFile)
       combinedSVGFilepathOption.map((filepath: String) => {
-        val dbQueries = new DBQueries(c.connection)
-        val deleteStatements = new DeleteStatements(c.connection)
-        val jdipSVGRenderer = new JdipSVGRenderer(dbQueries, filepath)
+        val jdipSVGRenderer = new JdipSVGRenderer(filepath)
         
-        val activeGames = dbQueries.getAllActiveGames()
+        val activeGames = DBQueries.getAllActiveGames()
         activeGames.foreach((g: Game) => {
-          deleteStatements.deleteOwnedProvincesForGame(g)
+          DeleteStatements.deleteOwnedProvincesForGame(g)
           val diplomacyUnitsForGame
-           = dbQueries.getDiplomacyUnitsForGameAtCurrentGameTime(g)
+           = DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(g)
           val ownedProvincesForGame = 
             OwnedProvince.getOwnedProvinces(diplomacyUnitsForGame, 
-              dbQueries.locations)
+              DBQueries.locations)
           
           transaction {
             Jdip.ownedProvinces.insert(ownedProvincesForGame)
@@ -152,14 +150,12 @@ object Main {
     })
     
   private def populatePotentialOrders(c: () => java.sql.Connection): Unit = {
-    val dbQueries = new DBQueries(c)
-    
-    val activeGames = dbQueries.getAllActiveGames()
+    val activeGames = DBQueries.getAllActiveGames()
     activeGames.foreach((g: Game) => {
-        val pmoc = new PotentialMoveOrderCreator(g, dbQueries)
-        val pshoc = new PotentialSupportHoldOrderCreator(g, dbQueries)
-        val psmoc = new PotentialSupportMoveOrderCreator(g, dbQueries)
-        val pcoc = new PotentialConvoyOrderCreator(g, dbQueries)
+        val pmoc = new PotentialMoveOrderCreator(g)
+        val pshoc = new PotentialSupportHoldOrderCreator(g)
+        val psmoc = new PotentialSupportMoveOrderCreator(g)
+        val pcoc = new PotentialConvoyOrderCreator(g)
         
         transaction {
 	        Jdip.potentialMoveOrders.insert(pmoc.createPotentialMoveOrders)

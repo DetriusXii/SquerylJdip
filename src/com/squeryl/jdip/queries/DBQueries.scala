@@ -6,40 +6,30 @@ import org.squeryl.PrimitiveTypeMode._
 import com.squeryl.jdip.schemas.Jdip
 import org.squeryl.Query
 
-class DBQueries(conn: () => java.sql.Connection) {
-  private def manageTransaction[A](codeBlock: => A): A  = {
-    val connection = conn()
-    val dbSession = Session.create(connection, new RevisedPostgreSqlAdapter)
-    val returnValue = using(dbSession) {
-      codeBlock
-    }
-    connection.close()
-    returnValue
-  }
-  
+object DBQueries {
   lazy val locations: List[Location] = 
-    manageTransaction { Jdip.locations.toList }
+    transaction { Jdip.locations.toList }
   
   lazy val uniqueProvinceNames: List[UniqueProvinceName] = 
-    manageTransaction { Jdip.uniqueProvinceNames.toList }
+    transaction { Jdip.uniqueProvinceNames.toList }
     
   lazy val empires: List[Empire] = 
-    manageTransaction { Jdip.empires.toList }
+    transaction { Jdip.empires.toList }
   
   lazy val adjacencies: List[Adjacency] =
-    manageTransaction {Jdip.adjacencies.toList }
+    transaction {Jdip.adjacencies.toList }
   
   lazy val provinces: List[Province] =
-    manageTransaction { Jdip.provinces.toList }
+    transaction { Jdip.provinces.toList }
     
   lazy val orderTypeUnitTypes: List[OrderTypeUnitType] = 
-  	manageTransaction { Jdip.orderTypeUnitTypes.toList }
+  	transaction { Jdip.orderTypeUnitTypes.toList }
 
   lazy val orderTypes: List[OrderType] = 
-    manageTransaction { Jdip.orderTypes.toList }
+    transaction { Jdip.orderTypes.toList }
 
   def getOwnedProvincesForGame(game: Game): List[OwnedProvince] = 
-  	manageTransaction {from(Jdip.ownedProvinces) (owp =>
+  	transaction {from(Jdip.ownedProvinces) (owp =>
         where(owp.gamePlayerEmpireID in gamePlayerEmpireQueryForGame(game) and 
           owp.gameTimeID === game.gameTimeID
         ) 
@@ -47,10 +37,10 @@ class DBQueries(conn: () => java.sql.Connection) {
       ).toList}
   
   def getGame(gameName: String): Option[Game] = 
-    manageTransaction {Jdip.games.lookup(gameName)}
+    transaction {Jdip.games.lookup(gameName)}
     
   def getGamePlayerEmpire(gamePlayerEmpireID: Int): Option[GamePlayerEmpire] = 
-  	manageTransaction { Jdip.gamePlayerEmpires.lookup(gamePlayerEmpireID) }
+  	transaction { Jdip.gamePlayerEmpires.lookup(gamePlayerEmpireID) }
     
   def getAdjacentLocationsForLocation(loc: Location): List[Location] = {
     adjacencies.filter(_.srcLocation == loc.id).map(adj => {
@@ -73,7 +63,7 @@ class DBQueries(conn: () => java.sql.Connection) {
     })
   
   def getAllLandUnitsForGame(game: Game): List[DiplomacyUnit] = 
-  	manageTransaction { from(Jdip.diplomacyUnits)(dpu => (
+  	transaction { from(Jdip.diplomacyUnits)(dpu => (
 	    where((dpu.unitType === UnitType.ARMY) and 
 	        (dpu.gamePlayerEmpireID in gamePlayerEmpireQueryForGame(game)) and
 	        (dpu.gameTimeID === game.gameTimeID)) 
@@ -81,7 +71,7 @@ class DBQueries(conn: () => java.sql.Connection) {
 	  )).toList }
   
   def getAllFleetUnitsForGame(game: Game): List[DiplomacyUnit] = 
-  	manageTransaction {from(Jdip.diplomacyUnits)(dpu => (
+  	transaction {from(Jdip.diplomacyUnits)(dpu => (
         where((dpu.unitType === UnitType.FLEET) and 
     	  (dpu.gamePlayerEmpireID in gamePlayerEmpireQueryForGame(game)) and
     	  (dpu.gameTimeID === game.gameTimeID)
@@ -91,7 +81,7 @@ class DBQueries(conn: () => java.sql.Connection) {
     }
   
   def getDiplomacyUnitsForGameAtCurrentGameTime(game: Game): List[DiplomacyUnit] =
-	manageTransaction {from(Jdip.diplomacyUnits)(dpu => 
+	transaction {from(Jdip.diplomacyUnits)(dpu => 
 	      where((dpu.gamePlayerEmpireID in gamePlayerEmpireQueryForGame(game))
 	      	and (dpu.gameTimeID === game.gameTimeID))
 	      select(dpu)
@@ -104,13 +94,13 @@ class DBQueries(conn: () => java.sql.Connection) {
     )
   
   def getGamePlayerEmpiresForGame(game: Game): List[GamePlayerEmpire] = 
-  	manageTransaction { from(Jdip.gamePlayerEmpires) (gpe =>
+  	transaction { from(Jdip.gamePlayerEmpires) (gpe =>
         where(gpe.id in gamePlayerEmpireQueryForGame(game: Game))
         select(gpe)
       ).toList }
   
   def getGameForGamePlayerEmpireID(gamePlayerEmpireID: Int): Option[Game] = 
-  	manageTransaction { 
+  	transaction { 
 	  from(Jdip.games, Jdip.gamePlayers, Jdip.gamePlayerEmpires)((g, gp, gpe) => 
 	  	where((gpe.id === gamePlayerEmpireID) and
     	  (gpe.gamePlayerKey === gp.id) and
@@ -121,7 +111,7 @@ class DBQueries(conn: () => java.sql.Connection) {
     
   def getGameForGamePlayerEmpire(
       gamePlayerEmpire: GamePlayerEmpire): Option[Game] = 
-    manageTransaction { 
+    transaction { 
 	  	from(Jdip.games, 
 	  		Jdip.gamePlayers, Jdip.gamePlayerEmpires)((g, gp, gpe) => 
 	  		where((gpe.id === gamePlayerEmpire.id) and
@@ -134,7 +124,7 @@ class DBQueries(conn: () => java.sql.Connection) {
   
   def getDiplomacyUnitsForGamePlayerEmpire(gamePlayerEmpire: GamePlayerEmpire):
 	  List[DiplomacyUnit] = 
-	manageTransaction { 
+	transaction { 
 	  from(Jdip.games, 
 	    Jdip.gamePlayers, Jdip.diplomacyUnits) ((g, gp, dpu) => 
 	    where((gp.id === gamePlayerEmpire.gamePlayerKey) and
@@ -147,17 +137,17 @@ class DBQueries(conn: () => java.sql.Connection) {
 	
 
   def getPlayers: List[Player] = 
-  	manageTransaction { from(Jdip.players)(select(_)).toList }
+  	transaction { from(Jdip.players)(select(_)).toList }
   
   def getPlayerFromPlayerName(playerName: String): Option[Player] = 
-  	manageTransaction { from(Jdip.players)(pl => 
+  	transaction { from(Jdip.players)(pl => 
         where(pl.id === playerName)
         select(pl)
       ).headOption }
 
   def getGamePlayerEmpire(gameName: String, playerName: String): 
 	  Option[GamePlayerEmpire] =  
-	manageTransaction {from(Jdip.gamePlayerEmpires) (gpe =>
+	transaction {from(Jdip.gamePlayerEmpires) (gpe =>
         where(gpe.gamePlayerKey in from(Jdip.gamePlayers) (gp => 
           where(gp.gameName === gameName and gp.playerName === playerName)
           select(gp.id)))
@@ -165,7 +155,7 @@ class DBQueries(conn: () => java.sql.Connection) {
       ).toList.headOption }
   
   def getGamesForUser(username: String): List[Game] = 
-  	manageTransaction {from(Jdip.games) (g =>
+  	transaction {from(Jdip.games) (g =>
         where(g.id in from(Jdip.gamePlayers) (gp => 
           where (gp.playerName like username)
           select(gp.gameName)
@@ -174,40 +164,62 @@ class DBQueries(conn: () => java.sql.Connection) {
       ).toList }
     
    def getGameTimesForGames(gameTimeIDs: List[Int]): List[GameTime] = 
-   	 manageTransaction {from(Jdip.gameTimes) (gt =>
+   	 transaction {from(Jdip.gameTimes) (gt =>
          where(gt.id in gameTimeIDs)
          select(gt)
        ).toList }
    
    def getLocationForDiplomacyUnit(diplomacyUnit: DiplomacyUnit): Location = 
-     manageTransaction { diplomacyUnit.unitLocation.single }
+     transaction { diplomacyUnit.unitLocation.single }
    
    def getAllActiveGames(): List[Game] = 
-     manageTransaction { from(Jdip.games) ( (g: Game) =>
+     transaction { from(Jdip.games) ( (g: Game) =>
          where(g.gameStateID === GameState.ACTIVE)
          select(g)
        ).toList }
    
    def getLocationFromLocationIDs(locationIDs: List[Int]): List[Location] = 
-   	 manageTransaction { from(Jdip.locations)( (loc: Location) => 
+   	 transaction { from(Jdip.locations)( (loc: Location) => 
          where(loc.id in locationIDs)
          select(loc)
        ).toList }
    
    def getGameMapForGameAtCurrentTime(game: Game): Option[GameMap] = 
-     manageTransaction { from(Jdip.gameMaps)((gm: GameMap) => 
+     transaction { from(Jdip.gameMaps)((gm: GameMap) => 
        	 where(gm.gameID === game.id and gm.gameTimeID === game.gameTimeID)
        	 select(gm)
-       ).firstOption }
+       ).headOption }
    
-   def getPotentialMoveOrdersForGamePlayerEmpire(gpe: GamePlayerEmpire): 
+   def getPotentialMoveOrdersForGamePlayerEmpireAtCurrentTime(gpe: GamePlayerEmpire): 
      List[PotentialMoveOrder] = 
-       manageTransaction {
-         from(Jdip.diplomacyUnits, Jdip.potentialMoveOrders) ((dpu, pmo) => 
-           where(dpu.gamePlayerEmpireID === gpe.id and
+       transaction {
+         from(Jdip.diplomacyUnits, 
+              Jdip.potentialMoveOrders) ((dpu, pmo) => 
+           where(
+             dpu.gamePlayerEmpireID === gpe.id and
              dpu.id === pmo.diplomacyUnitID    
            )
            select (pmo)
          ).toList
    	  }
+   
+   def getPotentialSupportHoldOrdersForGamePlayerEmpire(gpe: GamePlayerEmpire):
+     List[PotentialSupportHoldOrder] =
+       transaction {
+         from(Jdip.diplomacyUnits, 
+              Jdip.potentialSupportHoldOrders,) ((dpu, psho) =>
+           where(dpu.gamePlayerEmpireID === gpe.id and
+             dpu.id === psho.diplomacyUnitID    
+           )
+           select(psho)
+         ).toList
+       }
+   
+   def getPotentialSupportMoveOrdersForGamePlayerEmpire(gpe: GamePlayerEmpire):
+     List[PotentialSupportMoveOrder] =
+       transaction {
+         from(Jdip.diplomacyUnits) (dpu => 
+           where(dpu.gamePlayerEmpireID ===)  
+         )
+       }
 }

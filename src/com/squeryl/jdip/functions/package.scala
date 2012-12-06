@@ -4,8 +4,7 @@ import com.squeryl.jdip.tables._
 import com.squeryl.jdip.queries.DBQueries
 
 package object functions {
-	def findAllPathsExternal(dbQueries: DBQueries,
-	    originLocation: Location, 
+	def findAllPathsExternal(originLocation: Location, 
 	    allFleetUnits: List[DiplomacyUnit]): List[List[Location]] = {
     def findAllPaths(currentLocation: Location,
     	allPaths: List[List[Location]],
@@ -23,12 +22,12 @@ package object functions {
      
       val isCurrentLocOnOriginProvince = 
         currentLocation.province.equals(originLocation.province)
-      val hasLandLocation = dbQueries.hasLandLocation(currentLocation)
+      val hasLandLocation = DBQueries.hasLandLocation(currentLocation)
       
       if (isCurrentLocLandLocation && isCurrentLocOnOriginLoc) {
         val newPath = currentLocation :: presentPath
         val coastLocations = 
-          dbQueries.getCoastLocationsFromLandLocation(currentLocation)
+          DBQueries.getCoastLocationsFromLandLocation(currentLocation)
         coastLocations.foldLeft(allPaths)((u, v) => {
           findAllPaths(v, allPaths, newPath)
         })
@@ -37,14 +36,14 @@ package object functions {
         newPath :: allPaths
       } else if (!isCurrentLocLandLocation && isCurrentLocOnOriginProvince) {
         val adjLocations = 
-          dbQueries.getAdjacentLocationsForLocation(currentLocation)
+          DBQueries.getAdjacentLocationsForLocation(currentLocation)
         val oceanAdjLocations = 
-          adjLocations.filter(!dbQueries.hasLandLocation(_))
+          adjLocations.filter(!DBQueries.hasLandLocation(_))
         val newPath = currentLocation :: presentPath
         oceanAdjLocations.foldLeft(allPaths)((u, v) => findAllPaths(v, u, newPath))
       } else if (!isCurrentLocOnOriginProvince && hasLandLocation) {
         val newPath = currentLocation :: presentPath;
-        val landLocationOption = dbQueries.locations.find(_ match {
+        val landLocationOption = DBQueries.locations.find(_ match {
           case Location(currentLocation.province, Coast.NO_COAST) => true
           case _ => false
         })
@@ -57,7 +56,7 @@ package object functions {
       } else if (!isCurrentLocOnPath && hasFleetUnit) {
         val newPath = currentLocation :: presentPath
         val adjLocations = 
-          dbQueries.getAdjacentLocationsForLocation(currentLocation)
+          DBQueries.getAdjacentLocationsForLocation(currentLocation)
         adjLocations.foldLeft(allPaths)((u, v) => findAllPaths(v, u, newPath))
       } else {
         allPaths

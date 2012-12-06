@@ -11,7 +11,7 @@ import java.io.ByteArrayOutputStream
 import javax.xml.transform.stream.StreamResult
 import java.io.ByteArrayInputStream
 
-class JdipSVGRenderer(dbQueries: DBQueries, dipmapWithSymbolsFilepath: String) {
+class JdipSVGRenderer(dipmapWithSymbolsFilepath: String) {
   
   //val SVG_FILE_PATH = "public/images/dipmapwithsymbols.svg"
   val BRIEF_LABEL_LAYER_ID = "BriefLabelLayer"
@@ -59,18 +59,18 @@ class JdipSVGRenderer(dbQueries: DBQueries, dipmapWithSymbolsFilepath: String) {
     })   
 
   def addProvinceColours(document: Document)(game: Game): Unit = {
-    dbQueries.getOwnedProvincesForGame(game).map((owp: OwnedProvince) => {
+    DBQueries.getOwnedProvincesForGame(game).map((owp: OwnedProvince) => {
       val province = owp.province
       val gamePlayerEmpireID = owp.gamePlayerEmpireID
       
       val uniqueProvinceNamesForProvince = 
-        dbQueries.uniqueProvinceNames.filter(_.provinceName.equals(province))
+        DBQueries.uniqueProvinceNames.filter(_.provinceName.equals(province))
       
-      val gamePlayerEmpireOption = dbQueries.getGamePlayerEmpire(gamePlayerEmpireID)
+      val gamePlayerEmpireOption = DBQueries.getGamePlayerEmpire(gamePlayerEmpireID)
       val provinceColourOption = gamePlayerEmpireOption.map(_ match {
         case GamePlayerEmpire(_, empire) => empire
       }).flatMap((empireName: String) => {
-        dbQueries.empires.find(_.id.equals(empireName)).map(_.provinceColour)
+        DBQueries.empires.find(_.id.equals(empireName)).map(_.provinceColour)
       })
       
       uniqueProvinceNamesForProvince.map((upn: UniqueProvinceName) => {
@@ -107,21 +107,21 @@ class JdipSVGRenderer(dbQueries: DBQueries, dipmapWithSymbolsFilepath: String) {
   }
 
   def addUnitsToDocument(document: Document)(game: Game): Unit = {
-    val diplomacyUnits = dbQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
+    val diplomacyUnits = DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
     val unitLayer: Option[Element] = document.getElementById(UNIT_LAYER_ID)
     val fullProvinceElementList: List[Element] = 
       document.getElementsByTagName("%s:%s" format (JDIP_NAMESPACE, PROVINCE_LABEL))
     
     diplomacyUnits.map(dpu => {
-      val locationOption = dbQueries.locations.find(_.id == dpu.unitLocationID)
+      val locationOption = DBQueries.locations.find(_.id == dpu.unitLocationID)
       
-      val gamePlayerEmpireOption = dbQueries.getGamePlayerEmpire(dpu.gamePlayerEmpireID)
+      val gamePlayerEmpireOption = DBQueries.getGamePlayerEmpire(dpu.gamePlayerEmpireID)
       val empireOption = gamePlayerEmpireOption.flatMap(gpe => 
-        dbQueries.empires.find(_.id == gpe.empireName))
+        DBQueries.empires.find(_.id == gpe.empireName))
       
       val uniqueProvinceNamesOption = locationOption.map(_ match {
         case Location(province, coast) => 
-          (dbQueries.uniqueProvinceNames.filter(_.provinceName.equals(province)), coast)
+          (DBQueries.uniqueProvinceNames.filter(_.provinceName.equals(province)), coast)
       }).map((u: Tuple2[List[UniqueProvinceName], String]) => {
         val coast = u._2
         val uniqueProvinceNames = u._1

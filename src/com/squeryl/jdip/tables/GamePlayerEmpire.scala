@@ -15,4 +15,5 @@ case class GamePlayerEmpire(gamePlayerKey: Int, empireName: String) extends
   val id = 0
   
   lazy val ownedProvinces = Jdip.owpGamePlayerEmpireForeignKey.left(this)
+  lazy val 
 }
