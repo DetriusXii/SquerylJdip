@@ -193,10 +193,9 @@ object DBQueries {
    def getPotentialMoveOrdersForGamePlayerEmpireAtCurrentTime(gpe: GamePlayerEmpire): 
      List[PotentialMoveOrder] = 
        transaction {
-         from(Jdip.diplomacyUnits, 
+         from(gpe.diplomacyUnits, 
               Jdip.potentialMoveOrders) ((dpu, pmo) => 
            where(
-             dpu.gamePlayerEmpireID === gpe.id and
              dpu.id === pmo.diplomacyUnitID    
            )
            select (pmo)
@@ -206,9 +205,9 @@ object DBQueries {
    def getPotentialSupportHoldOrdersForGamePlayerEmpire(gpe: GamePlayerEmpire):
      List[PotentialSupportHoldOrder] =
        transaction {
-         from(Jdip.diplomacyUnits, 
-              Jdip.potentialSupportHoldOrders,) ((dpu, psho) =>
-           where(dpu.gamePlayerEmpireID === gpe.id and
+         from(gpe.diplomacyUnits,
+             Jdip.potentialSupportHoldOrders) ((dpu, psho) =>
+           where(
              dpu.id === psho.diplomacyUnitID    
            )
            select(psho)
@@ -218,8 +217,23 @@ object DBQueries {
    def getPotentialSupportMoveOrdersForGamePlayerEmpire(gpe: GamePlayerEmpire):
      List[PotentialSupportMoveOrder] =
        transaction {
-         from(Jdip.diplomacyUnits) (dpu => 
-           where(dpu.gamePlayerEmpireID ===)  
-         )
+         from(Jdip.potentialSupportMoveOrders) (psmo =>
+           where(psmo.diplomacyUnitID in from(gpe.diplomacyUnits)(dpu =>
+               select(dpu.id)))
+           select(psmo)
+         ).toList
        }
+   
+   def getPotentialConvoyOrdersForGamePlayerEmpire(gpe: GamePlayerEmpire):
+     List[PotentialConvoyOrder] =
+       transaction {
+         from(Jdip.potentialConvoyOrders) (pco =>
+           where(pco.diplomacyUnitID in from(gpe.diplomacyUnits)(dpu =>
+               select(dpu.id)  
+           ))
+           select(pco)
+         ).toList
+       }
+   
+   
 }
