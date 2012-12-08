@@ -27,6 +27,9 @@ object DBQueries {
 
   lazy val orderTypes: List[OrderType] = 
     transaction { Jdip.orderTypes.toList }
+  
+  lazy val gameTimes: List[GameTime] =
+    transaction { Jdip.gameTimes.toList }
 
   def getOwnedProvincesForGame(game: Game): List[OwnedProvince] = 
   	transaction {from(Jdip.ownedProvinces) (owp =>
@@ -163,11 +166,10 @@ object DBQueries {
         select(g)
       ).toList }
     
-   def getGameTimesForGames(gameTimeIDs: List[Int]): List[GameTime] = 
-   	 transaction {from(Jdip.gameTimes) (gt =>
-         where(gt.id in gameTimeIDs)
-         select(gt)
-       ).toList }
+   def getGameTimesForGameTimeIDs(gameTimeIDs: List[Int]): List[GameTime] = 
+   	 gameTimeIDs.map((gameTimeID: Int) => 
+   	   gameTimes.find(_.id == gameTimeID)
+   	 ).flatten
    
    def getLocationForDiplomacyUnit(diplomacyUnit: DiplomacyUnit): Location = 
      transaction { diplomacyUnit.unitLocation.single }
@@ -178,11 +180,10 @@ object DBQueries {
          select(g)
        ).toList }
    
-   def getLocationFromLocationIDs(locationIDs: List[Int]): List[Location] = 
-   	 transaction { from(Jdip.locations)( (loc: Location) => 
-         where(loc.id in locationIDs)
-         select(loc)
-       ).toList }
+   def getLocationForLocationIDs(locationIDs: List[Int]): List[Location] = 
+   	 locationIDs.map((locationID: Int) => {
+   	   locations.find(_.id == locationID)
+   	 }).flatten
    
    def getGameMapForGameAtCurrentTime(game: Game): Option[GameMap] = 
      transaction { from(Jdip.gameMaps)((gm: GameMap) => 
@@ -234,6 +235,4 @@ object DBQueries {
            select(pco)
          ).toList
        }
-   
-   
 }
