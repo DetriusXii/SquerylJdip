@@ -14,7 +14,7 @@ class PotentialSupportHoldOrderCreator(game: Game) {
       })
     val allUnits = DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
     val provincialLocationsWithUnitPresent =
-      provincialLocations.filter(loc => allUnits.exists(_.unitLocation == loc.id))
+      provincialLocations.filter(loc => allUnits.exists(_.unitLocationID == loc.id))
     provincialLocationsWithUnitPresent
   }
   
@@ -24,7 +24,7 @@ class PotentialSupportHoldOrderCreator(game: Game) {
       
     dpusForGame.foldLeft(Nil: List[PotentialSupportHoldOrder])((u, v) => {
       val supportHoldsForUnit = getSupportHolds(v)
-      supportHoldsForUnit.map(w => new PotentialSupportHoldOrder(v.id, w.id))
+      u ++ supportHoldsForUnit.map(w => new PotentialSupportHoldOrder(v.id, w.id))
     })
   }
 }
