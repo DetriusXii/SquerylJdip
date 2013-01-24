@@ -111,7 +111,19 @@ object DBQueries {
         )
         select(g)
       ).headOption }
-    
+  
+  def getPlayerForGamePlayerEmpire(
+      gamePlayerEmpire: GamePlayerEmpire): Option[Player] =
+  transaction {
+    from(Jdip.players, Jdip.gamePlayers, Jdip.gamePlayerEmpires)(
+        (p, gp, gpe) => 
+          where((gpe.id === gamePlayerEmpire.id) and
+              (gpe.gamePlayerKey === gp.id) and
+              (p.id === gp.playerName))
+          select(p)
+        ).headOption
+  }
+  
   def getGameForGamePlayerEmpire(
       gamePlayerEmpire: GamePlayerEmpire): Option[Game] = 
     transaction { 
