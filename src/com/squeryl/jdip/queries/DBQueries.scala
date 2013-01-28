@@ -247,4 +247,11 @@ object DBQueries {
            select(pco)
          ).toList
        }
+   
+   def getOrderForDiplomacyUnit(dpu: DiplomacyUnit): Option[Order] = transaction {
+     from(Jdip.orders)(o => 
+       where(o.id === dpu.id)
+       select(o)
+     ).headOption
+   }
 }

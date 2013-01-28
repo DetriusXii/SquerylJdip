@@ -96,24 +96,17 @@ object Jdip extends PostgreSchema("jdip") {
   		ph.id === ot.phase
   )  
     
-  val gamePlayerEmpiresOrdersForeignKey = 
-    oneToManyRelation(gamePlayerEmpires, orders).via((gpr, o) => {
-        gpr.id === o.gamePlayerEmpireID
-    })
-  val orderTypeOrdersForeignKey = oneToManyRelation(orderTypes, orders).via((ot, o) => 
+  val otOrdersForeignKey = oneToManyRelation(orderTypes, orders).via((ot, o) => 
         ot.id === o.orderType
     )
-  val unitTypesOrdersForeignKey = oneToManyRelation(unitTypes, orders).via((ut, o) => 
-        ut.id === o.unitType
+  val dpuOrdersForeignKey = oneToManyRelation(diplomacyUnits, orders).via((dpu, o) => 
+        dpu.id === o.id
     )
   val srcLocationOrdersForeignKey = oneToManyRelation(locations, orders).via((loc, o) => 
-    loc.id === o.srcLocationID
+    loc.id === o.srcLocationIDOption
   )
   val dstLocationOrdersForeignKey = oneToManyRelation(locations, orders).via((loc, o) =>
   	loc.id === o.dstLocationIDOption
-  )
-  val unitLocationOrdersForeignKey = oneToManyRelation(locations, orders).via((loc, o) => 
-  	loc.id === o.unitLocationID
   )
    
   val uniProvinceForeignKey = oneToManyRelation(provinces, uniqueProvinceNames).via((pr, upn) =>
@@ -193,10 +186,12 @@ object Jdip extends PostgreSchema("jdip") {
   ))
   
   on(diplomacyUnits)(dpu => declare(
-		  columns(dpu.gamePlayerEmpireID, dpu.unitNumber, dpu.gameTimeID) are(unique)
+	columns(dpu.gamePlayerEmpireID, dpu.unitNumber, dpu.gameTimeID) are(unique)
   ))
   
   on(locations)((loc: Location) => declare(
-		  columns(loc.province, loc.coast) are(unique)
+	columns(loc.province, loc.coast) are(unique)
   ))
+  
+  
 }
