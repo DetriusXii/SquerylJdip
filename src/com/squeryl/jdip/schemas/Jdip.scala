@@ -185,6 +185,10 @@ object Jdip extends PostgreSchema("jdip") {
     pco.id is(autoIncremented)    
   ))
   
+  on(orders)(o => declare(
+	o.id is(primaryKey)
+  ))
+  
   on(diplomacyUnits)(dpu => declare(
 	columns(dpu.gamePlayerEmpireID, dpu.unitNumber, dpu.gameTimeID) are(unique)
   ))
