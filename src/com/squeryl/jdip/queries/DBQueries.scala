@@ -254,4 +254,9 @@ object DBQueries {
        select(o)
      ).headOption
    }
+   
+   def getProvinceFromOwnedProvince(owp: OwnedProvince): Option[Province] = 
+     transaction {
+	   owp.province.headOption
+   }
 }

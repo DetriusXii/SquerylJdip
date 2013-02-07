@@ -60,7 +60,7 @@ class JdipSVGRenderer(dipmapWithSymbolsFilepath: String) {
 
   def addProvinceColours(document: Document)(game: Game): Unit = {
     DBQueries.getOwnedProvincesForGame(game).map((owp: OwnedProvince) => {
-      val province = owp.province
+      val province = owp.provinceID
       val gamePlayerEmpireID = owp.gamePlayerEmpireID
       
       val uniqueProvinceNamesForProvince = 
