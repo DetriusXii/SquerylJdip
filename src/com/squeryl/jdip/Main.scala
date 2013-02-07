@@ -14,13 +14,12 @@ import com.squeryl.jdip.tables._
 import com.squeryl.jdip.creators._
 import com.squeryl.jdip.schemas.Jdip
 import com.squeryl.jdip.creators._
-import scalaz.ReaderT
-import scalaz.Identity
+import scalaz._
 import com.squeryl.jdip.queries.DBQueries
 import com.squeryl.jdip.renderers.JdipSVGRenderer
 import com.squeryl.jdip.queries.DeleteStatements
 
-object Main {
+object Main extends Kleislis {
   
   private def insertIntoTables(username: String, 
       password: String, configFilepath: String, 
@@ -102,20 +101,17 @@ object Main {
       
     }
   
-  private def insertIntoTablesReader: ReaderT[Identity, Configuration, Unit] =
-    ReaderT((c: Configuration) => 
-      Identity(
-        insertIntoTables(c.username, c.password, c.configFile, c.connection)
-      )
-    )
+  private def insertIntoTablesReader: Kleisli[Identity, Configuration, Unit] =
+    ask[Identity, Configuration].
+    	map((c: Configuration) => insertIntoTables(c.username, 
+    	       c.password, c.configFile, c.connection))
  
   private def populatePotentialOrdersReader: 
-    ReaderT[Identity, Configuration, Unit] =
-      ReaderT((c: Configuration) => 
-        Identity(populatePotentialOrders(c.connection)))
+    Kleisli[Identity, Configuration, Unit] =
+      ask[Identity, Configuration].map((c: Configuration) => 
+        populatePotentialOrders(c.connection))
   
-  private def renderSVGImageReader: ReaderT[Identity, Configuration, Unit] =
-    ReaderT((c: Configuration) => {
+  private def renderSVGImage(c: Configuration): Unit = {
       val combinedSVGFilepathOption =
         ConfigXMLLoader.findFirstCombinedSVG(c.configFile)
       combinedSVGFilepathOption.map((filepath: String) => {
@@ -146,8 +142,10 @@ object Main {
         })
       })
       
-      Identity()
-    })
+    }
+    
+  private def renderSVGImageReader: Kleisli[Identity, Configuration, Unit] =
+    ask[Identity, Configuration].map(c => renderSVGImage(c))
     
   private def populatePotentialOrders(c: () => java.sql.Connection): Unit = {
     val activeGames = DBQueries.getAllActiveGames()
@@ -212,12 +210,11 @@ object Main {
     for (c <- configurationOption; 
       _ <- handleDropOnlyFlag(dropOnlyFlag)
     ) yield {
-      val binder = ReaderT.readerTBind[Identity, Configuration]
-      val pReader = binder.
-      	bind[Unit, Unit](insertIntoTablesReader, 
-      	  _ => populatePotentialOrdersReader)
-      binder.bind[Unit, Unit](pReader, 
-            _ => renderSVGImageReader).value(c).value
+      ask[Identity, Configuration].
+      	flatMap(_ => insertIntoTablesReader).
+      	flatMap(_ => populatePotentialOrdersReader).
+      	flatMap(_ => renderSVGImageReader).
+      	    apply(c).value
     }
     
     println("The program terminated successfully")
