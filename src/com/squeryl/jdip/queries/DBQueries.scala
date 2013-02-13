@@ -259,4 +259,19 @@ object DBQueries {
      transaction {
 	   owp.province.headOption
    }
+   
+   def getActiveGames(): List[Game] = transaction {
+     from(Jdip.games)(g => 
+     	where(g.gameStateID === GameState.ACTIVE)
+     	select(g)
+     ).toList
+   }
+   
+   def getOrdersForDiplomacyUnits(dpus: List[DiplomacyUnit]): List[Order] = 
+     transaction {
+	   from(Jdip.orders)(o => 
+	     where(o.id in dpus.map(_.id))
+	     select(o)
+	   ).toList
+   	 }
 }
