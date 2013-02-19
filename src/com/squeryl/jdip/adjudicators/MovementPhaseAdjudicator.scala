@@ -1,6 +1,9 @@
 package com.squeryl.jdip.adjudicators
 import com.squeryl.jdip.queries.DBQueries
 import com.squeryl.jdip.tables._
+import scalaz.effects.ST
+import scalaz.effects.STRef
+import scalaz.effects._
 
 object MovementPhaseAdjudicator {
   val UNDETERRED_FLAG = 0
@@ -9,15 +12,33 @@ object MovementPhaseAdjudicator {
   val DISLOGDED_FLAG = 3
 }
 
-class MovementPhaseAdjudicator {
+class MovementPhaseAdjudicator(game: Game) {
+  type MovementST[A] = ST[MovementPhaseAdjudicator, 
+    STRef[MovementPhaseAdjudicator, A]]
+  
   def isAdjacentLocations(loc1: Int, loc2: Int): Boolean =
     DBQueries.adjacencies.exists(a => 
       a.srcLocation == loc1 && a.dstLocation == loc2
     )
     
-  val provinceWithParties()  
+  lazy val provinceWithParties: 
+	  List[(Province, MovementST[List[DiplomacyUnit]])] = {
+    val initialSet = DBQueries.provinces.map((prov: Province) =>
+      (prov, newVar[MovementPhaseAdjudicator, List[DiplomacyUnit]](Nil))
+    )
     
-	def adjudicateGame(game: Game): Unit = {
+    val dpus = DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
+    dpus.map(dpu => {
+      for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
+    	   (prov, st) <-initialSet.find(_._1.id.compareTo(loc.province) == 0)
+      ) yield {
+        
+      }
+    })
+  }
+  
+    
+	def adjudicateGame: Unit = {
 	  val diplomacyUnitsForGame =
 	    DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
 	    
