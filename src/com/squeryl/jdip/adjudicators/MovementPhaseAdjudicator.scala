@@ -32,7 +32,11 @@ class MovementPhaseAdjudicator(game: Game) {
       for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
     	   (prov, st) <-initialSet.find(_._1.id.compareTo(loc.province) == 0)
       ) yield {
-        
+    	for ( stRef <- st
+    	    stRef.write()
+    	) yield {
+    	  
+    	}  
       }
     })
   }
