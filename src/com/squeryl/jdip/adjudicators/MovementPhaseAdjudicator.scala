@@ -15,11 +15,52 @@ object MovementPhaseAdjudicator {
 class MovementPhaseAdjudicator(game: Game) {
   type MovementST[A] = ST[MovementPhaseAdjudicator, 
     STRef[MovementPhaseAdjudicator, A]]
+  type PartiesInProvinceType = 
+    List[(Province, MovementST[List[DiplomacyUnit]])]
   
   def isAdjacentLocations(loc1: Int, loc2: Int): Boolean =
     DBQueries.adjacencies.exists(a => 
       a.srcLocation == loc1 && a.dstLocation == loc2
     )
+    
+  // This maps over the hold locations of the units.  A unit moving
+    // to another province would still be considered as part of a hold
+  private def populateSetWithDiplomacyUnits(
+      partySet: PartiesInProvinceType): Unit = {
+    val dpus = DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
+    
+    dpus.foreach(dpu => {
+      for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
+    	   (prov, st) <- partySet.find(_._1.id.compareTo(loc.province) == 0)
+      ) yield {
+    	for ( stRef <- st;
+    	    _ <- stRef.write(dpu :: Nil)
+    	) yield {
+    	  ()
+    	}  
+      }
+    })
+  }
+  
+  private def populateSetWithMovingDiplomacyUnits(
+      partySet: PartiesInProvinceType): Unit = {
+    
+    val dpusWithMoveOrder =
+      DBQueries.getDiplomacyUnitsWithMoveOrderForGameAtCurrentTime(game)
+    
+    dpusWithMoveOrder.foreach(dpu => {
+      for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
+    		  (prov, st) <- partySet.find(_._1.id.compareTo(loc.province) == 0)
+      ) yield {
+        for (stRef <- st;
+        	curList <- stRef.read;
+        	_ <- stRef.write(dpu :: curList)
+        ) yield {
+          ()
+        }
+      }
+    })
+  }
     
   lazy val provinceWithParties: 
 	  List[(Province, MovementST[List[DiplomacyUnit]])] = {
@@ -27,18 +68,11 @@ class MovementPhaseAdjudicator(game: Game) {
       (prov, newVar[MovementPhaseAdjudicator, List[DiplomacyUnit]](Nil))
     )
     
-    val dpus = DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
-    dpus.map(dpu => {
-      for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
-    	   (prov, st) <-initialSet.find(_._1.id.compareTo(loc.province) == 0)
-      ) yield {
-    	for ( stRef <- st
-    	    stRef.write()
-    	) yield {
-    	  
-    	}  
-      }
-    })
+    populateSetWithDiplomacyUnits(initialSet)
+    populateSetWithMovingDiplomacyUnits(initialSet)
+    
+    
+    initialSet
   }
   
     

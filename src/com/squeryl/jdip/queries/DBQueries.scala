@@ -207,13 +207,35 @@ object DBQueries {
      List[PotentialMoveOrder] = 
        transaction {
          from(gpe.diplomacyUnits, 
-              Jdip.potentialMoveOrders) ((dpu, pmo) => 
+        	  Jdip.games,
+        	  Jdip.gamePlayers,
+              Jdip.potentialMoveOrders) ((dpu, g, gp, pmo) => 
            where(
+             g.gameTimeID ===  dpu.gameTimeID and
+             g.id === gp.gameName and
+             gp.id === gpe.gamePlayerKey and
              dpu.id === pmo.diplomacyUnitID    
            )
            select (pmo)
          ).toList
    	  }
+   
+   def getDiplomacyUnitsWithMoveOrderForGameAtCurrentTime(game: Game): 
+	   List[DiplomacyUnit] = transaction {
+     from(Jdip.gamePlayers,
+         Jdip.gamePlayerEmpires, 
+         Jdip.orders,
+         Jdip.diplomacyUnits)((gp, gpe, o, dpu) => 
+     	where(
+     	    gp.gameName === game.id and
+     		gpe.gamePlayerKey === gp.id and
+     		o.orderType === OrderType.MOVE and
+     		o.id === dpu.id and
+     		game.gameTimeID === dpu.gameTimeID
+     	)
+     	select(dpu)
+     ).toList
+   }
    
    def getPotentialSupportHoldOrdersForGamePlayerEmpire(gpe: GamePlayerEmpire):
      List[PotentialSupportHoldOrder] =
