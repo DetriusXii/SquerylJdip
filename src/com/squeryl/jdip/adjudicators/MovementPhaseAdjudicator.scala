@@ -4,6 +4,7 @@ import com.squeryl.jdip.tables._
 import scalaz.effects.ST
 import scalaz.effects.STRef
 import scalaz.effects._
+import scalaz.Forall
 
 object MovementPhaseAdjudicator {
   val UNDETERRED_FLAG = 0
@@ -13,9 +14,8 @@ object MovementPhaseAdjudicator {
 }
 
 class MovementPhaseAdjudicator(game: Game) {
-  type STRefST[S, A] = ST[S, STRef[S, A]]
-  type PartiesInProvinceType[S] = 
-    List[(Province, STRefST[S, List[DiplomacyUnit]])]
+  type ProvincesWithParties = List[(Province, IORef[List[DiplomacyUnit]])] 
+  
   
   def isAdjacentLocations(loc1: Int, loc2: Int): Boolean =
     DBQueries.adjacencies.exists(a => 
@@ -25,59 +25,46 @@ class MovementPhaseAdjudicator(game: Game) {
   // This maps over the hold locations of the units.  A unit moving
     // to another province would still be considered as part of a hold
   private def populateSetWithDiplomacyUnits(
-      partySet: PartiesInProvinceType): Unit = {
-    val dpus = DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
+      partySet: ProvincesWithParties): Unit = {
     
     dpus.foreach(dpu => {
       for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
-    	   (prov, st) <- partySet.find(_._1.id.compareTo(loc.province) == 0)
+    	   (prov, ioRef) <- partySet.find(_._1.id.compareTo(loc.province) == 0)
       ) yield {
-    	for ( stRef <- st;
-    	    _ <- stRef.write(dpu :: Nil)
-    	) yield {
-    	  ()
-    	}  
+        ioRef.write(dpu :: Nil).unsafePerformIO
       }
     })
   }
   
   private def populateSetWithMovingDiplomacyUnits(
-      partySet: PartiesInProvinceType): Unit = {
-    
-    val dpusWithMoveOrder =
-      DBQueries.getDiplomacyUnitsWithMoveOrderForGameAtCurrentTime(game)
+      partySet: ProvincesWithParties): Unit = {
     
     dpusWithMoveOrder.foreach(dpu => {
       for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
-    		  (prov, st) <- partySet.find(_._1.id.compareTo(loc.province) == 0)
+    	(prov, ioRef) <- partySet.find(_._1.id.compareTo(loc.province) == 0)
       ) yield {
-        for (stRef <- st;
-        	curList <- stRef.read;
-        	_ <- stRef.write(dpu :: curList)
-        ) yield {
-          ()
-        }
+        ioRef.write()
       }
     })
   }
     
-  lazy val provinceWithParties: 
-	  List[(Province, MovementST[List[DiplomacyUnit]])] = {
-    val initialSet = DBQueries.provinces.map((prov: Province) =>
-      (prov, newVar[MovementPhaseAdjudicator, List[DiplomacyUnit]](Nil))
-    )
-    
+  
+  lazy val provinceWithParties: ProvincesWithParties = {
+    val initialSet = DBQueries.provinces.map((prov: Province) => {
+      (prov, newIORef[List[DiplomacyUnit]](Nil).unsafePerformIO)
+    })
     populateSetWithDiplomacyUnits(initialSet)
     populateSetWithMovingDiplomacyUnits(initialSet)
-    
     
     initialSet
   }
   
-  def provinceWithParties[S]: PartiesInProvinceType[S] = {
-    val initialSet = DBQueries.provinces.map((prov: Province))
-  }
+  lazy val dpusWithMoveOrder = 
+    DBQueries.getDiplomacyUnitsWithMoveOrderForGameAtCurrentTime(game)
+  lazy val dpus =
+    DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
   
+  lazy val provincePartyStrength: List[Province, List]
     
 	def adjudicateGame: Unit = {
 	  val diplomacyUnitsForGame =
@@ -87,6 +74,8 @@ class MovementPhaseAdjudicator(game: Game) {
 	    val orderForDpu = DBQueries.getOrderForDiplomacyUnit(dpu)
 	    (dpu, orderForDpu) 
 	  })
+	  
+	  
 	    
 	  val moveOrderTuples = dpuOrderTuples.filter(dpuOrderTuple =>
 	    dpuOrderTuple._2 match {
