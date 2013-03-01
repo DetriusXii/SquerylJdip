@@ -13,10 +13,9 @@ object MovementPhaseAdjudicator {
 }
 
 class MovementPhaseAdjudicator(game: Game) {
-  type MovementST[A] = ST[MovementPhaseAdjudicator, 
-    STRef[MovementPhaseAdjudicator, A]]
-  type PartiesInProvinceType = 
-    List[(Province, MovementST[List[DiplomacyUnit]])]
+  type STRefST[S, A] = ST[S, STRef[S, A]]
+  type PartiesInProvinceType[S] = 
+    List[(Province, STRefST[S, List[DiplomacyUnit]])]
   
   def isAdjacentLocations(loc1: Int, loc2: Int): Boolean =
     DBQueries.adjacencies.exists(a => 
@@ -73,6 +72,10 @@ class MovementPhaseAdjudicator(game: Game) {
     
     
     initialSet
+  }
+  
+  def provinceWithParties[S]: PartiesInProvinceType[S] = {
+    val initialSet = DBQueries.provinces.map((prov: Province))
   }
   
     
