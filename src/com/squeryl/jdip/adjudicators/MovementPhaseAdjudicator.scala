@@ -1,8 +1,6 @@
 package com.squeryl.jdip.adjudicators
 import com.squeryl.jdip.queries.DBQueries
 import com.squeryl.jdip.tables._
-import scalaz.effects.ST
-import scalaz.effects.STRef
 import scalaz.effects._
 import scalaz.Forall
 
@@ -43,16 +41,18 @@ class MovementPhaseAdjudicator(game: Game) {
       for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
     	(prov, ioRef) <- partySet.find(_._1.id.compareTo(loc.province) == 0)
       ) yield {
-        ioRef.write()
+        ioRef.read.flatMap(state => 
+        	ioRef.write(dpu :: state)
+        ).unsafePerformIO
       }
     })
   }
     
   
   lazy val provinceWithParties: ProvincesWithParties = {
-    val initialSet = DBQueries.provinces.map((prov: Province) => {
+    val initialSet = DBQueries.provinces.map((prov: Province) =>
       (prov, newIORef[List[DiplomacyUnit]](Nil).unsafePerformIO)
-    })
+    )
     populateSetWithDiplomacyUnits(initialSet)
     populateSetWithMovingDiplomacyUnits(initialSet)
     
