@@ -12,9 +12,31 @@ object MovementPhaseAdjudicator {
 }
 
 class MovementPhaseAdjudicator(game: Game) {
+  private type Marker = Int
+  private val BOUNCE_MARKER: Marker = 0
+  private val SUPPORT_CUT_MARKER: Marker = 1
+  private val UNIT_DISLODGED_MARKER: Marker = 2
+  private val CONVOY_ORDER_FAILED: Marker = 3
+  private val FUZZY_MARKER: Marker = 4
+  
   type ProvincesWithParties = List[(Province, IORef[List[DiplomacyUnit]])] 
+  type PartyStrength = (DiplomacyUnit, List[DiplomacyUnit])
   
-  
+  lazy val dpus =
+    DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
+  lazy val allOrdersForGame =
+    DBQueries.getOrdersForDiplomacyUnits(dpus)
+  lazy val supportHoldOrders =
+    allOrdersForGame.filter(_.orderType.compareTo(OrderType.SUPPORT_HOLD) == 0)
+  lazy val supportMoveOrders =
+    allOrdersForGame.filter(_.orderType.compareTo(OrderType.SUPPORT_MOVE) == 0)
+  lazy val convoyOrders =
+    allOrdersForGame.filter(_.orderType.compareTo(OrderType.CONVOY) == 0)
+  lazy val moveOrders =
+    allOrdersForGame.filter(_.orderType.compareTo(OrderType.MOVE) == 0)
+    
+    
+    
   def isAdjacentLocations(loc1: Int, loc2: Int): Boolean =
     DBQueries.adjacencies.exists(a => 
       a.srcLocation == loc1 && a.dstLocation == loc2
@@ -29,7 +51,9 @@ class MovementPhaseAdjudicator(game: Game) {
       for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
     	   (prov, ioRef) <- partySet.find(_._1.id.compareTo(loc.province) == 0)
       ) yield {
-        ioRef.write(dpu :: Nil).unsafePerformIO
+        if (!dpusWithMoveOrder.exists(_.id == dpu.id)) {
+        	ioRef.write(dpu :: Nil).unsafePerformIO
+        }
       }
     })
   }
@@ -49,7 +73,7 @@ class MovementPhaseAdjudicator(game: Game) {
   }
     
   
-  lazy val provinceWithParties: ProvincesWithParties = {
+  private lazy val provinceWithParties: ProvincesWithParties = {
     val initialSet = DBQueries.provinces.map((prov: Province) =>
       (prov, newIORef[List[DiplomacyUnit]](Nil).unsafePerformIO)
     )
@@ -59,13 +83,22 @@ class MovementPhaseAdjudicator(game: Game) {
     initialSet
   }
   
-  lazy val dpusWithMoveOrder = 
-    DBQueries.getDiplomacyUnitsWithMoveOrderForGameAtCurrentTime(game)
-  lazy val dpus =
-    DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
+  def getInitialPartyStrength: List[(Province, IORef[PartyStrength])] = {
+    dpus.foreach(dpu => {
+      for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
+    		  (prev, ioRef) <- 
+      )
+    })
+  }
   
-  lazy val provincePartyStrength: List[Province, List]
+  def getFinalPartyStrengths(
+      currentPartyStrengths: List[(Province, IORef[PartyStrength])]): 
+    	  List[(Province, PartyStrength)] = {
     
+  }
+  
+
+  
 	def adjudicateGame: Unit = {
 	  val diplomacyUnitsForGame =
 	    DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
