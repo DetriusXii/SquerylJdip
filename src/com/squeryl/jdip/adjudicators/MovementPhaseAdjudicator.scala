@@ -3,39 +3,76 @@ import com.squeryl.jdip.queries.DBQueries
 import com.squeryl.jdip.tables._
 import scalaz.effects._
 import scalaz.Forall
+import scala.collection.immutable.TreeSet
 
 object MovementPhaseAdjudicator {
-  val UNDETERRED_FLAG = 0
-  val QUESTIONABLE_FLAG = 1
-  val DISRUPTED_FLAG = 2
-  val DISLOGDED_FLAG = 3
+  type Marker = Int
+  val UNDETERRED_FLAG: Marker = 0
+  val QUESTIONABLE_FLAG: Marker = 1
+  val DISRUPTED_FLAG: Marker = 2
+  val DISLOGDED_FLAG: Marker = 3
+  val BOUNCE_FLAG: Marker = 4
 }
 
 class MovementPhaseAdjudicator(game: Game) {
-  private type Marker = Int
-  private val BOUNCE_MARKER: Marker = 0
-  private val SUPPORT_CUT_MARKER: Marker = 1
-  private val UNIT_DISLODGED_MARKER: Marker = 2
-  private val CONVOY_ORDER_FAILED: Marker = 3
-  private val FUZZY_MARKER: Marker = 4
+  private type DiplomacyUnitOrderState = 
+    (DiplomacyUnit, String, IORef[Marker])
+  private type ProvinceWithParties = 
+    (Province, IORef[List[DiplomacyUnitOrderState]])
   
-  type ProvincesWithParties = List[(Province, IORef[List[DiplomacyUnit]])] 
-  type PartyStrength = (DiplomacyUnit, List[DiplomacyUnit])
   
-  lazy val dpus =
+  implicit object DPUOrdering extends Ordering[DiplomacyUnitOrderState] {
+    
+    override def compare(x: DiplomacyUnitOrderState, 
+        y: DiplomacyUnitOrderState): Int =
+      if (x._1.id < y._1.id) {
+        -1
+      } else if (x._1.id == y._1.id) {
+        0
+      } else {
+        1
+      } 
+  }
+  
+  implicit object ProvinceOrdering extends Ordering[ProvinceWithParties] {
+    override def compare(x: ProvinceWithParties, 
+        y: ProvinceWithParties): Int =
+          x._1.id.compareTo(y._1.id)
+  }
+  
+  implicit def useLocationAsKey(loc: Location): ProvinceWithParties =
+    (Province(loc.province, ""), newIORef[List[DiplomacyUnitOrderState]](Nil))
+  private def hasMoveOrder(dpu: DiplomacyUnit) = 
+    moveOrders.exists(_.id == dpu.id)
+    
+    
+  private lazy val dpus =
     DBQueries.getDiplomacyUnitsForGameAtCurrentGameTime(game)
-  lazy val allOrdersForGame =
+  private lazy val allOrdersForGame =
     DBQueries.getOrdersForDiplomacyUnits(dpus)
-  lazy val supportHoldOrders =
+  private lazy val supportHoldOrders =
     allOrdersForGame.filter(_.orderType.compareTo(OrderType.SUPPORT_HOLD) == 0)
-  lazy val supportMoveOrders =
+  private lazy val supportMoveOrders =
     allOrdersForGame.filter(_.orderType.compareTo(OrderType.SUPPORT_MOVE) == 0)
-  lazy val convoyOrders =
+  private lazy val convoyOrders =
     allOrdersForGame.filter(_.orderType.compareTo(OrderType.CONVOY) == 0)
-  lazy val moveOrders =
+  private lazy val moveOrders =
     allOrdersForGame.filter(_.orderType.compareTo(OrderType.MOVE) == 0)
     
-    
+  private val diplomacyUnitOrderMap: TreeSet[DiplomacyUnitOrderState] = {
+    val initialTreeSet = 
+      new TreeSet[DiplomacyUnitOrderState]()
+    dpus.foldLeft(initialTreeSet)((treeSet, dpu) => {
+      val orderForDpu = allOrdersForGame.find(_.id == dpu.id) match {
+        case Some(o: Order) => o.orderType
+        case None => OrderType.HOLD
+      }
+      
+      treeSet + ((dpu, 
+          orderForDpu, 
+          newIORef(UNDETERRED_FLAG).unsafePerformIO))
+    })
+  }
     
   def isAdjacentLocations(loc1: Int, loc2: Int): Boolean =
     DBQueries.adjacencies.exists(a => 
@@ -43,41 +80,43 @@ class MovementPhaseAdjudicator(game: Game) {
     )
     
   // This maps over the hold locations of the units.  A unit moving
-    // to another province would still be considered as part of a hold
+    // to another province would not be considered as part of a hold
   private def populateSetWithDiplomacyUnits(
-      partySet: ProvincesWithParties): Unit = {
+      provinceSet: TreeSet[ProvinceWithParties]): Unit = {
     
-    dpus.foreach(dpu => {
+    dpus.foldLeft(provinceSet)((treeSet, dpu) => {
       for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
-    	   (prov, ioRef) <- partySet.find(_._1.id.compareTo(loc.province) == 0)
+    	  (prov, ioRef) <- treeSet.from(loc).headOption
       ) yield {
-        if (!dpusWithMoveOrder.exists(_.id == dpu.id)) {
-        	ioRef.write(dpu :: Nil).unsafePerformIO
-        }
+    	  if (prov.id.compareTo(loc.province) == 0 && !hasMoveOrder(dpu)) {
+    	    ioRef.write((dpu, 
+    	        OrderType.HOLD, 
+    	        newIORef[Marker](UNDETERRED_FLAG))).unsafePerformIO
+    	  }
       }
+      
+      treeSet
     })
   }
   
   private def populateSetWithMovingDiplomacyUnits(
       partySet: ProvincesWithParties): Unit = {
     
-    dpusWithMoveOrder.foreach(dpu => {
-      for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
-    	(prov, ioRef) <- partySet.find(_._1.id.compareTo(loc.province) == 0)
-      ) yield {
-        ioRef.read.flatMap(state => 
-        	ioRef.write(dpu :: state)
-        ).unsafePerformIO
-      }
-    })
+    
   }
     
   
-  private lazy val provinceWithParties: ProvincesWithParties = {
-    val initialSet = DBQueries.provinces.map((prov: Province) =>
-      (prov, newIORef[List[DiplomacyUnit]](Nil).unsafePerformIO)
-    )
-    populateSetWithDiplomacyUnits(initialSet)
+  private lazy val provinceWithParties: TreeSet[ProvinceWithParties] = {
+    val initialTreeSet = 
+      DBQueries.provinces.
+      	foldLeft(new TreeSet[ProvinceWithParties])((treeSet, prov) => {
+      	  treeSet + (
+      	      (prov, 
+      	      newIORef[List[DiplomacyUnitOrderState]](Nil).unsafePerformIO))
+      	})
+    
+    
+    populateSetWithDiplomacyUnits(initialTreeSet)
     populateSetWithMovingDiplomacyUnits(initialSet)
     
     initialSet
