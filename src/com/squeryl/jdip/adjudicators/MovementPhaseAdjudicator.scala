@@ -82,26 +82,34 @@ class MovementPhaseAdjudicator(game: Game) {
   // This maps over the hold locations of the units.  A unit moving
     // to another province would not be considered as part of a hold
   private def populateSetWithDiplomacyUnits(
-      provinceSet: TreeSet[ProvinceWithParties]): Unit = {
+      provinceWithPartiesSet: TreeSet[ProvinceWithParties]): Unit = {
     
-    dpus.foldLeft(provinceSet)((treeSet, dpu) => {
+    dpus.foreach(dpu => {
       for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
-    	  (prov, ioRef) <- treeSet.from(loc).headOption
+    	  (prov, ioRef) <- provinceWithPartiesSet.from(loc).headOption
       ) yield {
-    	  if (prov.id.compareTo(loc.province) == 0 && !hasMoveOrder(dpu)) {
-    	    ioRef.write((dpu, 
+    	  if (!hasMoveOrder(dpu)) {
+    	    val tuple = (dpu, 
     	        OrderType.HOLD, 
-    	        newIORef[Marker](UNDETERRED_FLAG))).unsafePerformIO
+    	        newIORef[Marker](UNDETERRED_FLAG).unsafePerformIO)
+    	    
+    	    ioRef.write(tuple).unsafePerformIO
     	  }
       }
-      
-      treeSet
     })
   }
   
   private def populateSetWithMovingDiplomacyUnits(
-      partySet: ProvincesWithParties): Unit = {
-    
+      provinceWithPartiesSet: ProvincesWithParties): Unit = {
+    dpus.foreach(dpu => 
+    	for (loc <- DBQueries.locations.find(_.id == dpu.unitLocationID);
+    		(prov, ioRef) <- provinceWithPartiesSet.from(loc).headOption
+    	) yield (
+    		ioRef.read.flatMap(currentParties => 
+    			ioRef.write((dpu, OrderType.MOVE, newIORef[])currentParties)
+    		)
+    	)
+    )
     
   }
     
