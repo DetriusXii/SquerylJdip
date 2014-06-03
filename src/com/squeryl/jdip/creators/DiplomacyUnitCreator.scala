@@ -4,6 +4,7 @@ import com.squeryl.jdip.tables.DiplomacyUnit
 import scalaz._
 import com.squeryl.jdip.tables._
 import java.io.File
+import scalaz.OptionT._
 
 object DiplomacyUnitCreator {
 	val NAME_ATTRIBUTE = "name"
@@ -16,7 +17,7 @@ object DiplomacyUnitCreator {
 	val VARIANT_TAGNAME = "VARIANT"
 	
 	implicit def optionToOptionT[A](option: Option[A]) = 
-	  new OptionTs {}.optionT[Iterable].apply(option :: Nil)
+	  optionT[Iterable].apply(option :: Nil)
 	  
 	  
 	def getLocationForCoastAndUnitType(unitType: String, 

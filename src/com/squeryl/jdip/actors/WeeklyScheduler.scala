@@ -8,8 +8,5 @@ object WeeklyScheduler {
   val FORCE_PROCESS_GAME = 1;
   
   private def updateGames(): Unit = {
-    val activeGames = DBQueries.getActiveGames();
-    
-    activeGames.map
   }
 }

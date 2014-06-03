@@ -3,10 +3,12 @@ package com.squeryl.jdip.creators
 import com.squeryl.jdip.tables.Adjacency
 import com.squeryl.jdip.tables.Location
 import scala.xml._
-import scalaz._
+import scalaz.OptionT._
 import com.squeryl.jdip.tables.UnitType
+import scalaz.Monad
+import scalaz.OptionT
 
-object AdjacencyCreator extends OptionTs {
+object AdjacencyCreator {
 	val PROVINCE_TAGNAME = "PROVINCE"
 	val ADJACENCY_TAGNAME = "ADJACENCY"
 	val UNIQUENAME_TAGNAME = "UNIQUENAME"
@@ -54,15 +56,20 @@ object AdjacencyCreator extends OptionTs {
 	}
 	
 	implicit def toOptionTFromOption[Q](option: Option[Q]): OptionT[Iterable, Q] =
-	  optionT[Iterable](option :: Nil)
+	  OptionT(option :: Nil)
 	
+	implicit val iterableInstance = new Monad[Iterable] {
+	  def point[A](a : => A): Iterable[A] = a :: Nil
+	  
+	  def bind[A, B](fa: Iterable[A])(f: A => Iterable[B]): Iterable[B] = 
+	    fa.flatMap(f)
+	}
+	  
 	def getAdjacencies(adjacencyXML: Elem, locations: Iterable[Location]): Iterable[Adjacency] = {
 	  val provincesNodeSeq = adjacencyXML \\ PROVINCE_TAGNAME
-	  val seqOptionT = optionT[Seq]
 	  val provincesNodeSeqOptionT: OptionT[Iterable, scala.xml.Node] = 
-	    optionT[Iterable](provincesNodeSeq.map(Some(_)))
+	    OptionT(provincesNodeSeq.map(Some(_)))
 	  
-	    
 	  (for (provinceNode <- provincesNodeSeqOptionT;
 		shortname <- toOptionTFromOption(provinceNode.attribute(SHORTNAME_ATTRIBUTE).map(_.toString));
 		adjacencyNode <- getAdjacencyNode(provinceNode);
@@ -75,6 +82,6 @@ object AdjacencyCreator extends OptionTs {
 		})
 	  ) yield (
 	    new Adjacency(srcLocation.id, neighbourLocation.id)
-	  )).value.flatten
+	  )).run.flatten
 	}
 }

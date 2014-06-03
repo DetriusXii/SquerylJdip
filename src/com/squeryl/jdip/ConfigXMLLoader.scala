@@ -1,6 +1,7 @@
 package com.squeryl.jdip
 import scala.xml._
 import scalaz._
+import scalaz.std.option._
 import java.io.File
 import javax.xml.parsers._
 
@@ -121,13 +122,13 @@ object ConfigXMLLoader {
 	  	u.label.equals(NAME_TAGNAME) && u.text.equals(COMBINED_SVG_FULLFILENAME)
 	  ))
 	  
-	  val filePaths = 
-	    combinedSVGAppsettingNode.map(_ \\ VALUE_TAGNAME map (_.text)).flatten
-	  filePaths.find(filepath => {
+	  val filePathsOption = 
+	    combinedSVGAppsettingNode.map(_ \\ VALUE_TAGNAME map (_.text))
+	  filePathsOption.flatMap(_.find(filepath => {
 	    val file = new File(filepath.trim())
 	    val exists = file.exists
 	    val isFile = file.isFile
 	    file.exists && file.isFile
-	  })
+	  }))
 	}
 }

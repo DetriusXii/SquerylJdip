@@ -15,11 +15,13 @@ import com.squeryl.jdip.creators._
 import com.squeryl.jdip.schemas.Jdip
 import com.squeryl.jdip.creators._
 import scalaz._
+import scalaz.Kleisli._
 import com.squeryl.jdip.queries.DBQueries
 import com.squeryl.jdip.renderers.JdipSVGRenderer
 import com.squeryl.jdip.queries.DeleteStatements
+import scalaz.Id._
 
-object Main extends Kleislis {
+object Main {
   
   private def insertIntoTables(username: String, 
       password: String, configFilepath: String, 
@@ -101,14 +103,14 @@ object Main extends Kleislis {
       
     }
   
-  private def insertIntoTablesReader: Kleisli[Identity, Configuration, Unit] =
-    ask[Identity, Configuration].
+  private def insertIntoTablesReader: Kleisli[Id, Configuration, Unit] =
+    ask[Id, Configuration].
     	map((c: Configuration) => insertIntoTables(c.username, 
     	       c.password, c.configFile, c.connection))
  
   private def populatePotentialOrdersReader: 
-    Kleisli[Identity, Configuration, Unit] =
-      ask[Identity, Configuration].map((c: Configuration) => 
+    Kleisli[Id, Configuration, Unit] =
+      ask[Id, Configuration].map((c: Configuration) => 
         populatePotentialOrders(c.connection))
   
   private def renderSVGImage(c: Configuration): Unit = {
@@ -144,8 +146,8 @@ object Main extends Kleislis {
       
     }
     
-  private def renderSVGImageReader: Kleisli[Identity, Configuration, Unit] =
-    ask[Identity, Configuration].map(c => renderSVGImage(c))
+  private def renderSVGImageReader: Kleisli[Id, Configuration, Unit] =
+    ask[Id, Configuration].map(c => renderSVGImage(c))
     
   private def populatePotentialOrders(c: () => java.sql.Connection): Unit = {
     val activeGames = DBQueries.getAllActiveGames()
@@ -210,11 +212,11 @@ object Main extends Kleislis {
     for (c <- configurationOption; 
       _ <- handleDropOnlyFlag(dropOnlyFlag)
     ) yield {
-      ask[Identity, Configuration].
+      ask[Id, Configuration].
       	flatMap(_ => insertIntoTablesReader).
       	flatMap(_ => populatePotentialOrdersReader).
       	flatMap(_ => renderSVGImageReader).
-      	    apply(c).value
+      	    apply(c)
     }
     
     println("The program terminated successfully")
