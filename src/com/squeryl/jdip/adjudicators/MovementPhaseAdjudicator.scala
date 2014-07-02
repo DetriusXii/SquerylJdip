@@ -22,7 +22,6 @@ object MovementPhaseAdjudicator {
   val BOUNCE_FLAG: Marker = 4
 }
 
-
 object OrderState {
   type RESOLUTION_STATE = Int
   val UNRESOLVED: RESOLUTION_STATE = 0
@@ -31,8 +30,10 @@ object OrderState {
 
   type MARK = String
   val NO_MARK: MARK = ""
-  val CONVOY_ENDANGERED = "convoy endangered"
-  val CUT = "cut"
+  val CONVOY_ENDANGERED: MARK = "convoy endangered"
+  val CUT: MARK = "cut"
+  val VOID: MARK = "void"
+  val CONVOY_UNDER_ATTACK: MARK = "convoy under attack"
 }
 
 class OrderState(val dpu: DiplomacyUnit, val order: Order) {
@@ -57,6 +58,8 @@ class OrderState(val dpu: DiplomacyUnit, val order: Order) {
    def setMark(newMark: OrderState.MARK): IO[Unit] = mark.flatMap(markIORef =>
      markIORef.write({newMark})
    )
+   def getMark(): IO[OrderState.MARK] = mark.flatMap(_.read)
+   def getSupportCount(): IO[Int] = supportCount.flatMap(_.read)
 }
 
 class WorldState(provinces: List[Province]) {
@@ -325,6 +328,10 @@ class MovementPhaseAdjudicator(game: Game) {
     getProvinceForOrder.map(worldState.addCombatUnitToProvince(_, orderState)).getOrElse({IO(())})
   }
   
+  private def foldListOfIO[A](l : List[IO[A]]): IO[List[A]] = l.foldLeft(IO(List.empty[A]))((u, v) =>
+  	for(foldedList <- u; element <- v) yield (element :: foldedList)
+  )
+  
   def checkDisruptions(worldState: WorldState)
   	(moveByConvoyOrderState: OrderState)
   	(fleetUnitsOnPaths: List[List[OrderState]]): IO[Unit] = {
@@ -336,13 +343,35 @@ class MovementPhaseAdjudicator(game: Game) {
           getOrElse({ListT.empty[IO, OrderState](IO.ioMonad)})
       
     val filteredListOfPaths = fleetUnitsOnPaths.filter(fleetUnitsOnPath =>
-    	fleetUnitsOnPath.exists(fleetUnit => {
-    		DBQueries.locations.find(_.id == fleetUnit.dpu.unitLocationID).map(loc =>
-    		    worldState.getCombatListForProvince(loc.province))
-    		
+    	!fleetUnitsOnPath.exists(fleetUnit => {
+    		val fleetUnitSupportCount = fleetUnit.getSupportCount().unsafePerformIO()
+    		val otherCombatListIO = DBQueries.locations.find(_.id == fleetUnit.dpu.unitLocationID).map(loc =>
+    		    worldState.getCombatListForProvince(loc.province).
+    		    map(_.filter(_.dpu.unitLocationID != fleetUnit.dpu.unitLocationID))).getOrElse({IO(Nil)})
+		    val combatListWithSupportCount =
+		      otherCombatListIO.flatMap(cl => foldListOfIO(cl.map(os => os.getSupportCount().map((_, os)))))
+		    combatListWithSupportCount.map(_.find(supportCountOrderState => 
+		      supportCountOrderState._1 > fleetUnitSupportCount).isEmpty).unsafePerformIO()
     	})
     )
+    
+    filteredListOfPaths match {
+      case Nil => moveByConvoyOrderState.setMark(OrderState.CONVOY_ENDANGERED)
+      case _ => IO()
+    }
   }
+  
+  def step4Execution(moveByConvoyOrders: List[OrderState], 
+      worldState: WorldState, 
+      fleetUnitsOnPath: List[List[OrderState]],
+      supports: List[OrderState]): IO[Unit] = moveByConvoyOrders.foldLeft(IO(()))((u, v) =>
+    for (_ <- checkDisruptions(worldState)(v)(fleetUnitsOnPath);
+    		markForUnit <- v.getMark();
+    		_ <- markForUnit match { 
+    		  case OrderState.NO_MARK => cutSupport(v)(false)(true)(fleetUnitsOnPath)(supports)
+    		  case _ => v.setMark(OrderState.CONVOY_UNDER_ATTACK)
+    		}
+  )
 	  
   def adjudicateGame: IO[Unit] = {
 	  val diplomacyUnitsForGame =
