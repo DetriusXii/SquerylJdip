@@ -6,8 +6,11 @@
 package com.squeryl.jdip.schemas
 
 import org.squeryl._
+import org.squeryl.PrimitiveTypeMode._
 import com.squeryl.jdip.tables._
 
 object InformationSchema extends Schema {
+  
+  
   val schemata = table[Schemata]("schemata", "information_schema")
 }

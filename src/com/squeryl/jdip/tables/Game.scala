@@ -12,10 +12,10 @@ import com.squeryl.jdip.schemas.Jdip
 case class Game(id: String, 
 			gameTimeID: Int,
             gameStateID: String, 
-            gameFile: Option[BinaryType]) extends KeyedEntity[String] {
-  def this() = this("", 0, GameState.WAITING, Some(new BinaryType(0)))
+            gameFile: Option[Array[Byte]]) extends KeyedEntity[String] {
+  def this() = this("", 0, GameState.WAITING, Some(new Array[Byte](0)))
   
-  def this(u: String, gameTime: Int) = this(u, gameTime, GameState.WAITING, Some(new BinaryType(0)))
+  def this(u: String, gameTime: Int) = this(u, gameTime, GameState.WAITING, Some(new Array[Byte](0)))
   
   lazy val players = Jdip.gamePlayers.left(this)
   

@@ -8,28 +8,28 @@ import org.squeryl.Query
 
 object DBQueries {
   lazy val locations: List[Location] = 
-    transaction { Jdip.locations.toList }
+    transaction { Jdip.locations.allRows.toList }
   
   lazy val uniqueProvinceNames: List[UniqueProvinceName] = 
-    transaction { Jdip.uniqueProvinceNames.toList }
+    transaction { Jdip.uniqueProvinceNames.allRows.toList }
     
   lazy val empires: List[Empire] = 
-    transaction { Jdip.empires.toList }
+    transaction { Jdip.empires.allRows.toList }
   
   lazy val adjacencies: List[Adjacency] =
-    transaction {Jdip.adjacencies.toList }
+    transaction {Jdip.adjacencies.allRows.toList }
   
   lazy val provinces: List[Province] =
-    transaction { Jdip.provinces.toList }
+    transaction { Jdip.provinces.allRows.toList }
     
   lazy val orderTypeUnitTypes: List[OrderTypeUnitType] = 
-  	transaction { Jdip.orderTypeUnitTypes.toList }
+  	transaction { Jdip.orderTypeUnitTypes.allRows.toList }
 
   lazy val orderTypes: List[OrderType] = 
-    transaction { Jdip.orderTypes.toList }
+    transaction { Jdip.orderTypes.allRows.toList }
   
   lazy val gameTimes: List[GameTime] =
-    transaction { Jdip.gameTimes.toList }
+    transaction { Jdip.gameTimes.allRows.toList }
 
   def getOwnedProvincesForGame(game: Game): List[OwnedProvince] = 
   	transaction {from(Jdip.ownedProvinces) (owp =>

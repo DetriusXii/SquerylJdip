@@ -35,41 +35,42 @@ object Jdip extends PostgreSchema("jdip") {
      table[GameMap]("game_maps", schemaName)
    
   val gamePlayers = 
-     manyToManyRelation(games, players, "game_players", schemaName).
+     manyToManyRelation(games, players, "game_players").
       via[GamePlayer]((g,p,gp) => 
          (g.id === gp.gameName, p.id === gp.playerName)
        ) 
        
-  val gamePlayerEmpires = manyToManyRelation(gamePlayers, empires, "game_player_empires", schemaName).
+  val gamePlayerEmpires = manyToManyRelation(gamePlayers, empires, "game_player_empires").
     via[GamePlayerEmpire]((gamePlayers, empires, gpe) => 
       (gamePlayers.id === gpe.gamePlayerKey, empires.id === gpe.empireName)
     )
     
-  val orderTypeUnitTypes = manyToManyRelation(orderTypes, unitTypes, "order_type_unit_types", schemaName).
+  val orderTypeUnitTypes = manyToManyRelation(orderTypes, unitTypes, 
+      "order_type_unit_types").
   	via[OrderTypeUnitType]((ot, ut, otut) =>
   		(ot.id === otut.orderType, ut.id === otut.unitType)
   	)
   
-  val locations	= manyToManyRelation(provinces, coasts, "locations", schemaName).
+  val locations	= manyToManyRelation(provinces, coasts, 
+      "locations").
   	via[Location]((pr, co, loc) => (pr.id === loc.province, co.id === loc.coast))
   	
-  val adjacencies = manyToManyRelation(locations, locations, "adjacencies", schemaName).via[Adjacency](
+  val adjacencies = manyToManyRelation(locations, locations, 
+      "adjacencies").via[Adjacency](
       (l1, l2, adjacency) => (l1.id === adjacency.srcLocation, l2.id === adjacency.dstLocation)
   )	
   	
   val potentialMoveOrders = 
     manyToManyRelation(diplomacyUnits, 
       locations, 
-      "potential_move_orders", 
-      schemaName).via[PotentialMoveOrder]((dpu, loc, pmo) => 
+      "potential_move_orders").via[PotentialMoveOrder]((dpu, loc, pmo) => 
           (dpu.id === pmo.diplomacyUnitID, loc.id === pmo.moveLocationID))
           
   
   val potentialSupportHoldOrders =
     manyToManyRelation(diplomacyUnits, 
       locations,
-      "potential_support_hold_orders", 
-      schemaName).via[PotentialSupportHoldOrder]((dpu, loc, psho) => 
+      "potential_support_hold_orders").via[PotentialSupportHoldOrder]((dpu, loc, psho) => 
       	(dpu.id === psho.diplomacyUnitID, loc.id === psho.supportHoldLocationID)
       )
   

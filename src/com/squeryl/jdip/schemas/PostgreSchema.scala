@@ -12,7 +12,7 @@ import java.sql.SQLException
 import org.squeryl.PrimitiveTypeMode._
 
 class PostgreSchema(val schemaName: String) extends Schema {
-  
+  override def name = Some(schemaName)
   
   override def create = {
     val schemaCount = InformationSchema.schemata.where(s => s.schema_name === schemaName).size

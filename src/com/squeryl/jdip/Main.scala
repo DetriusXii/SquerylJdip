@@ -20,6 +20,11 @@ import com.squeryl.jdip.queries.DBQueries
 import com.squeryl.jdip.renderers.JdipSVGRenderer
 import com.squeryl.jdip.queries.DeleteStatements
 import scalaz.Id._
+import scalaz.iteratee.IterateeT
+import scalaz.iteratee.Input
+import scalaz.effect.IO
+import scalaz.iteratee.StepT
+import scalaz.iteratee.EnumeratorT
 
 object Main {
   
@@ -81,7 +86,7 @@ object Main {
       val selectedEmpires = "Turkey" :: "Austria" :: "Russia" :: 
         "England" :: "Italy" :: "France" :: "Germany" :: Nil
       
-      val gamePlayerEmpires = (ids zip selectedEmpires) map
+      /*val gamePlayerEmpires = (ids zip selectedEmpires) map
         (u => Jdip.gamePlayerEmpires.insert(new GamePlayerEmpire(u._1, u._2)))
         if (gamePlayersQuery.size == 7) {
           for ( g1 <- game1;
@@ -98,7 +103,7 @@ object Main {
             diplomacyUnits map (u => Jdip.diplomacyUnits.insert(u))
             ()
           }  
-        }
+        }*/
       
       
     }
@@ -170,6 +175,20 @@ object Main {
     
   }
   
+  def iterateeItems[R, A](startingValue: A)(foldCondition: (A, R) => A): IterateeT[R, IO, A] = {
+    def step(v: A, numRowsCounted: Int): Input[R] => IterateeT[R, IO, A] = {
+      case Input.Element(x) if numRowsCounted < 2 => {
+        val foldedValue = foldCondition(v, x)
+        val newStep = step(foldedValue, numRowsCounted + 1)
+        IterateeT(IO(StepT.scont(newStep)))
+      }
+      case Input.Element(x) => IterateeT(IO(StepT.sdone(v, Input.Element(x))))
+      case Input.Empty() => IterateeT(IO(StepT.scont(step(v, numRowsCounted))))
+      case Input.Eof() => IterateeT(IO(StepT.sdone(v, Input.Eof[R])))
+    }
+    IterateeT(IO(StepT.scont(step(startingValue, 0))))
+  }
+  
   def main(args: Array[String]): Unit = {
     val fullDriverClassName = "org.postgresql.Driver"
     val jdbcURL = "jdbc:postgresql:postgres"
@@ -198,7 +217,17 @@ object Main {
 		  )
 	)
 	
-	transaction {
+	val enumerator = EnumeratorT.enumIterator[Player, IO](
+	  from (Jdip.players)(p => select(p)).iterator
+	)
+	
+	val result = PrimitiveTypeMode.transaction {
+      (iterateeItems[Player, Int](0)((i, _) => i + 20) &= enumerator).run.unsafePerformIO
+    }
+	
+	println("Folded result: %d" format result)
+	
+	/*transaction {
       Jdip.drop
     }
     
@@ -220,7 +249,7 @@ object Main {
     }
     
     println("The program terminated successfully")
-    sys.exit(0)
+    sys.exit(0)*/
   }
 
   

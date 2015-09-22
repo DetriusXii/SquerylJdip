@@ -11,6 +11,7 @@ import java.sql._
 import org.squeryl.Session
 import org.squeryl.annotations._
 import org.squeryl.internals.StatementWriter
+import org.squeryl.AbstractSession
 
 class RevisedPostgreSqlAdapter extends org.squeryl.adapters.PostgreSqlAdapter {
   override def writeUniquenessConstraint(t: Table[_], cols: Iterable[FieldMetaData]) = {
@@ -98,7 +99,7 @@ class RevisedPostgreSqlAdapter extends org.squeryl.adapters.PostgreSqlAdapter {
   }
   
   @throws(classOf[SQLException])
-  def executeCreateSchema(session: Session, schemaName: String) = {
+  def executeCreateSchema(session: AbstractSession, schemaName: String) = {
     val st = session.connection.prepareStatement("CREATE SCHEMA %s" format schemaName)
     
     try {
@@ -109,7 +110,7 @@ class RevisedPostgreSqlAdapter extends org.squeryl.adapters.PostgreSqlAdapter {
   }
   
   @throws(classOf[SQLException])
-  def executeDropSchema(session: Session, schemaName: String) = {
+  def executeDropSchema(session: AbstractSession, schemaName: String) = {
     val st = session.connection.prepareStatement("DROP SCHEMA %s CASCADE" format schemaName)
     try {
       st.execute
