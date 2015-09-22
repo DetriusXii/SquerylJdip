@@ -5,6 +5,10 @@ import com.squeryl.jdip.tables._
 import scala.collection.immutable.TreeSet
 import java.sql.Timestamp
 import scalaz.{Order => _, _}
+import scalaz.OptionT._
+import scalaz.iteratee._
+import scalaz.std.list._
+import scalaz.std.list.listInstance._
 import com.squeryl.jdip.functions._
 import scala.collection.immutable.TreeMap
 import scalaz.effect._
@@ -188,7 +192,7 @@ class MovementPhaseAdjudicator[S](game: Game) {
 	  ST[S, Unit] = 
 	    (for (dstLocationID <- sho.order.dstLocationIDOption;
 	        holdOS <- holdOrders.find(_.dpu.unitLocationID == dstLocationID))
-	    yield (holdOS.increaseSupportCount(sho.dpu).map(_ => ()))).getOrElse(sho.setPresentOrderToHold)
+	    yield (holdOS.increaseSupportCount(sho).map(_ => ()))).getOrElse(sho.setPresentOrderToHold)
   
   private def increaseSupportCountOfMoveOrder(moveOrders: List[OrderState[S]])(smo: OrderState[S]):
 	  ST[S, Unit] =
@@ -197,7 +201,7 @@ class MovementPhaseAdjudicator[S](game: Game) {
 	    	moveOS <- moveOrders.find(_.dpu.unitLocationID == srcLocationID);
 	    	dstLocationID <- moveOS.order.dstLocationIDOption;
 	    	_ <- Some(moveOS) if targetLocationID == srcLocationID
-	    ) yield (moveOS.increaseSupportCount(smo.dpu).map(_ => ()))).getOrElse(smo.setPresentOrderToHold)
+	    ) yield (moveOS.increaseSupportCount(smo).map(_ => ()))).getOrElse(smo.setPresentOrderToHold)
 	
   private def increaseNoHelpList[S](moveOrders: List[OrderState[S]], 
       allOrders: List[OrderState[S]])(smo: OrderState[S]): ST[S, Unit] =
@@ -440,6 +444,63 @@ class MovementPhaseAdjudicator[S](game: Game) {
     		  case _ => v.setMark(OrderState.CONVOY_UNDER_ATTACK)
     		}
   )
+  
+  /*def step5Execution(moveByConvoyOrders: List[OrderState],
+      worldState: WorldState,
+      fleetUnitsOnPath: List[List[OrderState]],
+      supports: List[OrderState]): IO[WorldState] = {
+    val initialConvoySucceededLength = worldState.convoySucceededList.length
+    
+    def handleConvoyEndangeredCase(os: OrderState): IO[Unit] = 
+      os.setMark(OrderState.NO_CONVOY).flatMap(_ => os.setSupportCountToZero()).flatMap(_ => os.getHelpList()).
+      flatMap(_.foldLeft(IO(()))((io, hOS) => io.flatMap(_ => hOS.getMark()).flatMap(_ match {
+        case OrderState.NO_CONVOY => hOS.setMark(OrderState.NO_CONVOY)
+        case _ => io
+      })))
+    
+    def handleConvoyUnderAttackCase(os: OrderState, ws: WorldState): IO[WorldState] =
+      os.setMark(OrderState.NO_MARK).flatMap(_ => cutSupport(os)(false)(true)(fleetUnitsOnPath)(supports)).
+      map(_ => ws.addConvoySucceeded(os))
+    
+    val finalWorldStateIO = moveByConvoyOrders.foldLeft(IO({worldState}))((wsIO, mco) =>
+    	for (ws <- wsIO;
+    	    _ <- checkDisruptions(ws)(mco)(fleetUnitsOnPath);
+    			markForUnit <- mco.getMark();
+    			newWS <- markForUnit match {
+    			  case OrderState.CONVOY_ENDANGERED => handleConvoyEndangeredCase(mco).map(_ => ws)
+    			  case OrderState.CONVOY_UNDER_ATTACK => handleConvoyUnderAttackCase(mco, ws)
+    			}
+    	) yield newWS
+    )
+    
+    finalWorldStateIO.flatMap(ws => ws.convoySucceededList.length > initialConvoySucceededLength match {
+      case true => step4Execution(moveByConvoyOrders, ws, fleetUnitsOnPath, supports)
+      case false => finalWorldStateIO
+    })
+  }
+  
+  def step6Execution(regularMoveOrders: List[OrderState], 
+      worldState: WorldState): IO[Unit] = {
+    def findSwapper(regularMoveOrder: OrderState, 
+        allMoveOrders: List[OrderState]): Option[OrderState] = 
+      allMoveOrders.find(otherOrder => 
+        (for (otherOrderMoveLocationID <- otherOrder.order.dstLocationIDOption;
+        	thisMoveLocationID <- regularMoveOrder.order.dstLocationIDOption
+        ) yield (otherOrderMoveLocationID == regularMoveOrder.dpu.unitLocationID &&
+        		thisMoveLocationID == otherOrder.dpu.unitLocationID
+        )).getOrElse({false})
+	  )
+    
+	
+	
+    val filteredMoveOrdersIO =
+      sequence(regularMoveOrders.map(mo => mo.getMark().map((_, mo)))).
+      map(_.filter(_._1.compareTo(OrderState.NO_MARK) == 0).map(_._2))
+      
+    for (filteredMoveOrders <- filteredMoveOrders;
+    	
+    )
+  }*/
 	  
   def adjudicateGame: IO[Unit] = {
 	  val diplomacyUnitsForGame =
