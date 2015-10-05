@@ -131,6 +131,8 @@ case class WorldState(combatTree: TreeMap[Province, List[DiplomacyUnit]],
       val updatedOrderState = orderState.increaseSupport(supportDPU)
       WorldState(combatTree, orderStateForUnitTree.updated(diplomacyUnit, updatedOrderState))
     }).getOrElse({this})
+    
+  def addNo
 }
 
 /*sealed class WorldState[S](val provinces: List[Province]) {
@@ -260,8 +262,8 @@ class MovementPhaseAdjudicator(game: Game) {
 	      worldState
 	    })
 	
-  private def increaseNoHelpList[S](moveOrders: List[OrderState[S]], 
-      allOrders: List[OrderState[S]])(smo: OrderState[S]): ST[S, Unit] =
+  private def increaseNoHelpList(worldState: WorldState)(moveOrders: List[OrderState], 
+      allOrders: List[OrderState])(smo: OrderState): WorldState =
     (for (targetLocationID <- smo.order.dstLocationIDOption;
     	srcLocationID <- smo.order.srcLocationIDOption;
     	moveOS <- moveOrders.find(_.dpu.unitLocationID == srcLocationID);
@@ -270,7 +272,7 @@ class MovementPhaseAdjudicator(game: Game) {
     	_ <- allOrders.find(otherOrder =>
     	  otherOrder.dpu.unitLocationID == targetLocationID && 
     	  otherOrder.dpu.gamePlayerEmpireID == smo.dpu.gamePlayerEmpireID)
-    ) yield (moveOS.addNoHelpingUnit(smo.dpu))).getOrElse({ST[S, Unit](())})
+    ) yield (moveOS.addNoHelpingUnit(smo.dpu))).getOrElse({worldState})
   
   private def handleCutSupportHelper[S](supportOS: OrderState[S], moveOS: OrderState[S], 
       supportOSPresentOrder: Order): IO[Unit] = 
